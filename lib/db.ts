@@ -13,7 +13,10 @@ if (!connectionString) {
     throw new Error("DATABASE_URL is not set")
 }
 
-const pool = new Pool({ connectionString })
+const pool = new Pool({
+    connectionString,
+    max: 1 // Optimization for Vercel Serverless Function Limits
+})
 const adapter = new PrismaPg(pool)
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
