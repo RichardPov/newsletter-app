@@ -141,3 +141,59 @@ export async function saveNewsletter(data: {
 
     return { success: true }
 }
+
+export async function completeOnboarding(data: {
+    name: string,
+    feeds: string[],
+    toneRawText?: string
+}) {
+    const { userId } = await auth()
+    if (!userId) throw new Error("Unauthorized")
+
+    // 1. Update User (Name + Flag)
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            name: data.name,
+            onboardingCompleted: true
+        }
+    })
+
+    // 2. Add Feeds
+    for (const url of data.feeds) {
+        try {
+            // Check if already exists to be safe
+            const existing = await prisma.feed.findFirst({ where: { userId, url } })
+            if (!existing) {
+                // simple add, ideally we parse name but for onboarding we might just use hostname
+                const name = new URL(url).hostname
+                await prisma.feed.create({ data: { userId, url, name } })
+            }
+        } catch (e) { }
+    }
+
+    // 3. Analyze Tone (Mock) if provided
+    if (data.toneRawText) {
+        // Mock AI analysis
+        const styles = ["Professional", "Casual", "Witty", "Authoritative"]
+        const randomStyle = styles[Math.floor(Math.random() * styles.length)]
+
+        await prisma.toneProfile.upsert({
+            where: { userId },
+            update: {
+                name: "Analyzed Persona",
+                style: `Based on your inputs, we detected a ${randomStyle} tone. ${data.toneRawText.substring(0, 50)}...`
+            },
+            create: {
+                userId,
+                name: "Analyzed Persona",
+                style: `Based on your inputs, we detected a ${randomStyle} tone.`
+            }
+        })
+    }
+
+    // 4. Trigger initial fetch
+    await refreshFeeds()
+
+    return { success: true }
+}

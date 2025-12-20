@@ -4,11 +4,29 @@ import { UserNav } from "@/components/user-nav"
 import { ScrollArea } from "@/components/ui/scroll-area" // Assuming ScrollArea exists or div fallback
 import { Separator } from "@/components/ui/separator"
 
-export default function DashboardLayout({
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+import { prisma } from "@/lib/db"
+
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const { userId } = await auth()
+
+    if (userId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { onboardingCompleted: true }
+        })
+
+        // If user exists but hasn't completed onboarding, force them there
+        // (Only if user exists - if not syncUser webhook hasn't run yet, but let's assume it has or we handle it gracefully)
+        if (user && !user.onboardingCompleted) {
+            redirect("/onboarding")
+        }
+    }
     return (
         <div className="flex h-screen overflow-hidden bg-background">
             {/* Sidebar - Hidden on mobile, usually handled by Sheet for mobile but for MVP basic hidden */}

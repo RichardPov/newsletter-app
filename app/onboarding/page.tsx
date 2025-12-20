@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import Link from "next/link"
-import { Check, Plus, ArrowRight, Rss } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
+import { Check, Plus, ArrowRight, Rss, Wand2, Loader2 } from "lucide-react"
+import { completeOnboarding } from "@/lib/actions"
+import { toast } from "sonner"
 
 // Mock Interests Data
 const INTERESTS = [
@@ -17,36 +19,41 @@ const INTERESTS = [
 // Mock Feeds Suggestions
 const FEED_SUGGESTIONS: Record<string, { name: string, url: string }[]> = {
     "Technology": [
-        { name: "TechCrunch", url: "techcrunch.com" },
-        { name: "The Verge", url: "theverge.com" },
-        { name: "Hacker News", url: "news.ycombinator.com" }
+        { name: "TechCrunch", url: "https://techcrunch.com/feed" },
+        { name: "The Verge", url: "https://www.theverge.com/rss/index.xml" },
+        { name: "Hacker News", url: "https://news.ycombinator.com/rss" }
     ],
     "Marketing": [
-        { name: "Marketing Land", url: "marketingland.com" },
-        { name: "HubSpot Blog", url: "blog.hubspot.com" },
-        { name: "Neil Patel", url: "neilpatel.com" }
+        { name: "Marketing Land", url: "https://marketingland.com/feed" },
+        { name: "HubSpot Blog", url: "https://blog.hubspot.com/feed" },
+        { name: "Neil Patel", url: "https://neilpatel.com/feed" }
     ],
     "Startups": [
-        { name: "Indie Hackers", url: "indiehackers.com" },
-        { name: "Y Combinator", url: "ycombinator.com/blog" }
+        { name: "Indie Hackers", url: "https://www.indiehackers.com/feed" },
+        { name: "Y Combinator", url: "https://blog.ycombinator.com/rss/" }
     ],
     "AI": [
-        { name: "OpenAI Blog", url: "openai.com/blog" },
-        { name: "MIT AI News", url: "news.mit.edu/topic/artificial-intelligence2" }
+        // { name: "OpenAI Blog", url: "openai.com/blog" }, // often hard to RSS, using wired instead
+        { name: "Wired AI", url: "https://www.wired.com/feed/category/ai/latest/rss" }
     ],
-    // Fallback for others
     "default": [
-        { name: "Medium Top", url: "medium.com" },
-        { name: "Wired", url: "wired.com" }
+        { name: "Medium Top", url: "https://medium.com/feed/topic/technology" },
+        { name: "Wired", url: "https://www.wired.com/feed/rss" }
     ]
 }
 
 export default function OnboardingPage() {
+    const router = useRouter()
     const [step, setStep] = useState(1)
     const [name, setName] = useState("")
     const [selectedInterests, setSelectedInterests] = useState<string[]>([])
     const [selectedFeeds, setSelectedFeeds] = useState<string[]>([])
     const [customFeed, setCustomFeed] = useState("")
+
+    // Step 4 Tone
+    const [toneMethod, setToneMethod] = useState<'url' | 'text'>('url')
+    const [toneInput, setToneInput] = useState("")
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handleNext = () => setStep(step + 1)
 
@@ -62,7 +69,7 @@ export default function OnboardingPage() {
         if (selectedFeeds.includes(feedUrl)) {
             setSelectedFeeds(selectedFeeds.filter(f => f !== feedUrl))
         } else {
-            if (selectedFeeds.length < 3) {
+            if (selectedFeeds.length < 5) {
                 setSelectedFeeds([...selectedFeeds, feedUrl])
             }
         }
@@ -79,8 +86,24 @@ export default function OnboardingPage() {
         return suggestions.filter((v, i, a) => a.findIndex(t => (t.url === v.url)) === i).slice(0, 9)
     }
 
+    const handleFinish = async (skipTone = false) => {
+        setIsSubmitting(true)
+        try {
+            await completeOnboarding({
+                name,
+                feeds: selectedFeeds,
+                toneRawText: skipTone ? undefined : toneInput
+            })
+            toast.success("All set! Welcome to your Dashboard.")
+            router.push("/dashboard")
+        } catch (e) {
+            toast.error("Something went wrong. Please try again.")
+            setIsSubmitting(false)
+        }
+    }
+
     return (
-        <div className="w-full max-w-2xl mx-auto">
+        <div className="w-full max-w-2xl mx-auto pt-10 px-4 pb-20">
             {/* Step 1: Welcome */}
             {step === 1 && (
                 <div className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -118,7 +141,7 @@ export default function OnboardingPage() {
                 <div className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div>
                         <h1 className="text-3xl font-serif font-medium text-slate-900 mb-4">What are you interested in?</h1>
-                        <p className="text-slate-500">Choose three or more.</p>
+                        <p className="text-slate-500">Choose three or more to get better suggestions.</p>
                     </div>
 
                     <div className="flex flex-wrap justify-center gap-3">
@@ -127,8 +150,8 @@ export default function OnboardingPage() {
                                 key={interest}
                                 onClick={() => toggleInterest(interest)}
                                 className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${selectedInterests.includes(interest)
-                                        ? "bg-emerald-600 text-white shadow-md scale-105"
-                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                    ? "bg-emerald-600 text-white shadow-md scale-105"
+                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                     }`}
                             >
                                 <span className="flex items-center gap-2">
@@ -156,7 +179,7 @@ export default function OnboardingPage() {
                 <div className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div>
                         <h1 className="text-3xl font-serif font-medium text-slate-900 mb-4">Pick your sources</h1>
-                        <p className="text-slate-500">We found these based on your interests. Select up to 3 to start.</p>
+                        <p className="text-slate-500">Select at least one feed to start tracking.</p>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4 text-left max-w-xl mx-auto">
@@ -165,15 +188,15 @@ export default function OnboardingPage() {
                                 key={feed.url}
                                 onClick={() => toggleFeed(feed.url)}
                                 className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${selectedFeeds.includes(feed.url)
-                                        ? "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500"
-                                        : "border-slate-200 hover:border-slate-300 bg-white"
+                                    ? "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500"
+                                    : "border-slate-200 hover:border-slate-300 bg-white"
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="bg-slate-100 p-2 rounded-lg">
                                         <Rss className="h-4 w-4 text-slate-600" />
                                     </div>
-                                    <span className="font-medium text-slate-900">{feed.name}</span>
+                                    <span className="font-medium text-slate-900 line-clamp-1">{feed.name}</span>
                                 </div>
                                 {selectedFeeds.includes(feed.url) && <Check className="h-4 w-4 text-emerald-600" />}
                             </div>
@@ -190,9 +213,9 @@ export default function OnboardingPage() {
                             />
                             <Button variant="outline" onClick={() => {
                                 if (customFeed) {
-                                    // Just a mock action
+                                    toggleFeed(customFeed)
                                     setCustomFeed("")
-                                    alert("Custom feed added!")
+                                    toast.success("Custom feed selected")
                                 }
                             }}>Add</Button>
                         </div>
@@ -200,11 +223,83 @@ export default function OnboardingPage() {
 
                     <div className="pt-8">
                         <Button
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 px-12 rounded-full text-lg shadow-lg hover:shadow-xl transition-all"
-                            asChild
+                            className="bg-slate-900 hover:bg-slate-800 text-white h-12 px-12 rounded-full text-lg"
+                            onClick={handleNext}
+                            disabled={selectedFeeds.length < 1}
                         >
-                            <Link href="/dashboard">Finish & Go to Dashboard</Link>
+                            Continue
                         </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Step 4: Tone Analysis */}
+            {step === 4 && (
+                <div className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div>
+                        <h1 className="text-3xl font-serif font-medium text-slate-900 mb-4">Train your AI Twin</h1>
+                        <p className="text-slate-500">Paste your recent blog or LinkedIn post so we can mimic your style.</p>
+                    </div>
+
+                    <div className="max-w-xl mx-auto space-y-6 text-left">
+                        <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-lg">
+                            <button
+                                className={`py-2 text-sm font-medium rounded-md transition-all ${toneMethod === 'url' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+                                onClick={() => setToneMethod('url')}
+                            >
+                                Paste URL
+                            </button>
+                            <button
+                                className={`py-2 text-sm font-medium rounded-md transition-all ${toneMethod === 'text' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+                                onClick={() => setToneMethod('text')}
+                            >
+                                Paste Text
+                            </button>
+                        </div>
+
+                        {toneMethod === 'url' ? (
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700">URL to your content</label>
+                                <div className="relative">
+                                    <Wand2 className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                                    <Input
+                                        placeholder="https://medium.com/@richard/my-latest-post"
+                                        className="pl-9 h-11"
+                                        value={toneInput}
+                                        onChange={(e) => setToneInput(e.target.value)}
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-500">We'll scan this page and analyze the writing structure.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700">Paste your writing</label>
+                                <Textarea
+                                    placeholder="Paste 1-2 paragraphs here..."
+                                    className="min-h-[150px]"
+                                    value={toneInput}
+                                    onChange={(e) => setToneInput(e.target.value)}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="pt-8 space-y-3">
+                        <Button
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 px-12 rounded-full text-lg shadow-lg hover:shadow-xl transition-all w-full max-w-sm"
+                            onClick={() => handleFinish(false)}
+                            disabled={isSubmitting || !toneInput}
+                        >
+                            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing & Setting up...</> : "Analyze & Finish"}
+                        </Button>
+                        <br />
+                        <button
+                            onClick={() => handleFinish(true)}
+                            className="text-sm text-slate-500 hover:text-slate-800 underline disabled:opacity-50"
+                            disabled={isSubmitting}
+                        >
+                            Skip for now (I'll do this later)
+                        </button>
                     </div>
                 </div>
             )}
