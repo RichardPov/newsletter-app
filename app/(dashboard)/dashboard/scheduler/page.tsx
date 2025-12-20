@@ -196,7 +196,7 @@ export default function SchedulerPage() {
                         // @ts-ignore
                         components={{
                             DayContent: CustomDay
-                        }}
+                        } as any}
                     />
                 </CardContent>
             </Card>
