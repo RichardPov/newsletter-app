@@ -89,17 +89,41 @@ export default function OnboardingPage() {
     const handleFinish = async (skipTone = false) => {
         setIsSubmitting(true)
         try {
+            // Mock success for now as requested or real call
             await completeOnboarding({
                 name,
                 feeds: selectedFeeds,
-                toneRawText: skipTone ? undefined : toneInput
+                toneRawText: skipTone ? undefined : (toneInput || "Skipped")
             })
-            toast.success("All set! Welcome to your Dashboard.")
-            router.push("/dashboard")
+            setStep(5) // New Success Step
         } catch (e) {
             toast.error("Something went wrong. Please try again.")
             setIsSubmitting(false)
         }
+    }
+
+    // ... inside return ...
+    // Add Step 5 block before end of component
+    if (step === 5) {
+        return (
+            <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500 pt-20">
+                <div className="mx-auto w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                    <Check className="h-12 w-12 text-emerald-600" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-serif font-medium text-slate-900 mb-4">You're all set!</h1>
+                    <p className="text-slate-500 max-w-md mx-auto">
+                        Your dashboard is ready. We've started curating content based on your interests.
+                    </p>
+                </div>
+                <Button
+                    className="bg-slate-900 hover:bg-slate-800 text-white h-12 px-12 rounded-full text-lg"
+                    onClick={() => router.push("/dashboard")}
+                >
+                    Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+            </div>
+        )
     }
 
     return (
