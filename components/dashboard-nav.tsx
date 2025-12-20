@@ -54,10 +54,15 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
             title: "Newsletter Builder",
             icon: Settings, // Placeholder icon
         },
+        {
+            href: "/onboarding",
+            title: "Onboard your Voice",
+            icon: MessageSquare, // Reusing icon or new one
+        },
     ]
 
     return (
-        <div className="flex flex-col h-full justify-between">
+        <div className="flex flex-col h-full">
             <nav
                 className={cn(
                     "flex flex-col space-y-1",
@@ -80,7 +85,7 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
                 ))}
             </nav>
 
-            <div className="flex flex-col space-y-1 pt-4 border-t mt-4">
+            <div className="flex flex-col space-y-1 pt-4 border-t mt-auto mb-4">
                 <Button
                     variant={pathname === "/dashboard/settings" ? "secondary" : "ghost"}
                     className={cn("justify-start", pathname === "/dashboard/settings" && "bg-muted")}

@@ -11,10 +11,30 @@ export async function getFeeds() {
     const { userId } = await auth()
     if (!userId) return []
 
-    return await prisma.feed.findMany({
+    const feeds = await prisma.feed.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' }
     })
+
+    if (feeds.length === 0) {
+        try {
+            const defaultFeed = await parser.parseURL("https://techcrunch.com/feed/")
+            const newFeed = await prisma.feed.create({
+                data: {
+                    userId,
+                    url: "https://techcrunch.com/feed/",
+                    name: defaultFeed.title || "TechCrunch"
+                }
+            })
+            // Trigger background fetch for items (optional, or let user refresh)
+            // await refreshFeeds() 
+            return [newFeed]
+        } catch (e) {
+            console.error("Failed to seed default feed", e)
+        }
+    }
+
+    return feeds
 }
 
 export async function addFeed(url: string) {

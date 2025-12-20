@@ -23,9 +23,9 @@ export default async function DashboardLayout({
 
         // If user exists but hasn't completed onboarding, force them there
         // (Only if user exists - if not syncUser webhook hasn't run yet, but let's assume it has or we handle it gracefully)
-        if (user && !user.onboardingCompleted) {
-            redirect("/onboarding")
-        }
+        // if (user && !user.onboardingCompleted) {
+        //    redirect("/onboarding")
+        // }
     }
     return (
         <div className="flex h-screen overflow-hidden bg-background">
@@ -34,9 +34,9 @@ export default async function DashboardLayout({
                 <div className="flex h-14 items-center border-b px-6">
                     <span className="text-lg font-bold">NewsWeave</span>
                 </div>
-                <div className="flex-1 overflow-auto py-4">
+                <div className="flex-1 flex flex-col overflow-hidden py-4">
                     {/* Add a wrapper or just use nav directly */}
-                    <div className="px-4">
+                    <div className="px-4 flex-1 flex flex-col">
                         <DashboardNav />
                     </div>
                 </div>
