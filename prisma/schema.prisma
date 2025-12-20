@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id // Clerk User ID mapping
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feeds       Feed[]
+  articles    Article[]
+  posts       Post[]
+  toneProfile ToneProfile?
+}
+
+model ToneProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  name   String // e.g., "Professional", "Casual"
+  style  String // Description of style
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Feed {
+  id            String    @id @default(cuid())
+  userId        String
+  url           String
+  name          String
+  lastFetchedAt DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articles Article[]
+
+  @@index([userId])
+}
+
+model Article {
+  id          String   @id @default(cuid())
+  userId      String   // Links to user who "owns" this cached copy/view
+  feedId      String?
+  title       String
+  url         String   @db.Text
+  content     String?  @db.Text
+  summary     String?  @db.Text
+  publishedAt DateTime
+  viralScore  Int      @default(0)
+  status      String   @default("REVIEW") // REVIEW, SAVED, DISMISSED
+  createdAt   DateTime @default(now())
+  
+  feed        Feed?    @relation(fields: [feedId], references: [id], onDelete: SetNull)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts       Post[]   // Posts derived from this article
+
+  @@unique([userId, url]) // Prevent duplicate articles from the same URL for the same user
+  @@index([userId, status])
+}
+
+// Social Media Posts
+model Post {
+  id           String    @id @default(cuid())
+  userId       String
+  articleId    String?   // Optional: sourced from an article
+  platform     String    // LINKEDIN, TWITTER, NEWSLETTER
+  content      String    @db.Text
+  scheduledFor DateTime?
+  status       String    // DRAFT, SCHEDULED, PUBLISHED
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article? @relation(fields: [articleId], references: [id])
+
+  @@index([userId, scheduledFor])
+}
