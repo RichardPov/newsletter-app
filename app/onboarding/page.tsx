@@ -89,15 +89,25 @@ export default function OnboardingPage() {
     const handleFinish = async (skipTone = false) => {
         setIsSubmitting(true)
         try {
-            // Mock success for now as requested or real call
-            await completeOnboarding({
+            console.log("Submitting onboarding...", { name, feeds: selectedFeeds, skipTone })
+
+            // Call server action
+            const result = await completeOnboarding({
                 name,
                 feeds: selectedFeeds,
                 toneRawText: skipTone ? undefined : (toneInput || "Skipped")
             })
-            setStep(5) // New Success Step
-        } catch (e) {
-            toast.error("Something went wrong. Please try again.")
+
+            // Check if server action returned success (implied void/success currently, but let's be safe)
+            // If completeOnboarding throws, it goes to catch. 
+            // If it returns { success: false }, we should handle it. 
+            // Currently completeOnboarding returns { success: true } or throws.
+
+            console.log("Onboarding action success, moving to step 5")
+            setStep(5)
+        } catch (e: any) {
+            console.error("Onboarding failed:", e)
+            toast.error("Failed to complete setup: " + (e.message || "Unknown error"))
             setIsSubmitting(false)
         }
     }

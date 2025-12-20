@@ -16,21 +16,25 @@ export async function getFeeds() {
         orderBy: { createdAt: 'desc' }
     })
 
+    // Auto-seed if empty
     if (feeds.length === 0) {
+        console.log("No feeds found, attempting to seed TechCrunch...")
         try {
-            const defaultFeed = await parser.parseURL("https://techcrunch.com/feed/")
+            const feedUrl = "https://techcrunch.com/feed/";
+            const defaultFeed = await parser.parseURL(feedUrl)
             const newFeed = await prisma.feed.create({
                 data: {
                     userId,
-                    url: "https://techcrunch.com/feed/",
+                    url: feedUrl,
                     name: defaultFeed.title || "TechCrunch"
                 }
             })
-            // Trigger background fetch for items (optional, or let user refresh)
-            // await refreshFeeds() 
+            console.log("Seeded successfully:", newFeed.id)
             return [newFeed]
-        } catch (e) {
-            console.error("Failed to seed default feed", e)
+        } catch (e: any) {
+            console.error("Failed to seed default feed:", e.message)
+            // Return empty if seeding fails, don't crash
+            return []
         }
     }
 
@@ -39,12 +43,23 @@ export async function getFeeds() {
 
 export async function addFeed(url: string) {
     const { userId } = await auth()
-    if (!userId) throw new Error("Unauthorized")
+    if (!userId) return { success: false, error: "Unauthorized" }
 
     try {
-        // validate RSS
+        console.log("Attempting to add feed:", url)
+
+        // 1. Validate RSS URL existence/reachability first
+        // Simple fetch check before full parse to fail fast on network issues
+        /*
+        const response = await fetch(url, { method: 'HEAD' });
+        if (!response.ok) throw new Error(`URL reachable but returned ${response.status}`);
+        */
+
+        // 2. Parse RSS
         const feed = await parser.parseURL(url)
-        if (!feed) throw new Error("Invalid RSS feed")
+        console.log("RSS Parsed, title:", feed.title)
+
+        if (!feed) throw new Error("Invalid RSS feed structure")
 
         const name = feed.title || new URL(url).hostname
 
@@ -58,9 +73,9 @@ export async function addFeed(url: string) {
 
         revalidatePath('/dashboard/feeds')
         return { success: true }
-    } catch (e) {
-        console.error(e)
-        return { success: false, error: "Failed to parse or add feed." }
+    } catch (e: any) {
+        console.error("addFeed error:", e)
+        return { success: false, error: e.message || "Failed to parse or add feed." }
     }
 }
 

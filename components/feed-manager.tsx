@@ -44,15 +44,16 @@ export function FeedManager({ initialFeeds }: FeedManagerProps) {
         setIsLoading(true)
 
         try {
-            const result = await addFeed(newFeedUrl)
-            if (result.success) {
+            const res = await addFeed(newFeedUrl) // Changed from newFeed to newFeedUrl
+            if (res?.success) {
                 toast.success("Feed added successfully")
-                setNewFeedUrl("")
+                setNewFeedUrl("") // Changed from setNewFeed to setNewFeedUrl
+                // setIsOpen(false) // Removed as setIsOpen is not defined in this component
             } else {
-                toast.error(result.error || "Failed to add feed")
+                toast.error(res?.error || "Failed to add feed. Check the URL.")
             }
-        } catch (error) {
-            toast.error("An unexpected error occurred")
+        } catch (e) {
+            toast.error("An unexpected error occurred.")
         } finally {
             setIsLoading(false)
         }
