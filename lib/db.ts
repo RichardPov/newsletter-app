@@ -15,7 +15,8 @@ if (!connectionString) {
 
 const pool = new Pool({
     connectionString,
-    max: 1 // Optimization for Vercel Serverless Function Limits
+    max: 1, // Optimization for Vercel Serverless Function Limits
+    ssl: { rejectUnauthorized: false }
 })
 const adapter = new PrismaPg(pool)
 
