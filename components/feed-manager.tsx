@@ -13,7 +13,7 @@ interface Feed {
     id: string
     url: string
     name: string
-    active: boolean
+    isActive: boolean
     createdAt?: Date
 }
 
@@ -110,7 +110,7 @@ export function FeedManager({ initialFeeds }: FeedManagerProps) {
                                     <TableCell className="text-muted-foreground truncate max-w-[300px]">{feed.url}</TableCell>
                                     <TableCell>
                                         <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
-                                            {feed.active ? 'Active' : 'Inactive'}
+                                            {feed.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right">
