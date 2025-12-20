@@ -4,7 +4,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Radio, MessageSquare, Newspaper, Share2, Settings, Calendar } from "lucide-react"
+import { LayoutDashboard, Radio, MessageSquare, Newspaper, Share2, Settings, Calendar, LogOut } from "lucide-react"
+import { SignOutButton } from "@clerk/nextjs"
 
 interface DashboardNavProps extends React.HTMLAttributes<HTMLElement> {
     items?: {
@@ -56,26 +57,51 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
     ]
 
     return (
-        <nav
-            className={cn(
-                "flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1",
-                className
-            )}
-            {...props}
-        >
-            {links.map((item) => (
+        <div className="flex flex-col h-full justify-between">
+            <nav
+                className={cn(
+                    "flex flex-col space-y-1",
+                    className
+                )}
+                {...props}
+            >
+                {links.map((item) => (
+                    <Button
+                        key={item.href}
+                        variant={pathname === item.href ? "secondary" : "ghost"}
+                        className={cn("justify-start", pathname === item.href && "bg-muted")}
+                        asChild
+                    >
+                        <Link href={item.href}>
+                            <item.icon className="mr-2 h-4 w-4" />
+                            {item.title}
+                        </Link>
+                    </Button>
+                ))}
+            </nav>
+
+            <div className="flex flex-col space-y-1 pt-4 border-t mt-4">
                 <Button
-                    key={item.href}
-                    variant={pathname === item.href ? "secondary" : "ghost"}
-                    className={cn("justify-start", pathname === item.href && "bg-muted")}
+                    variant={pathname === "/dashboard/settings" ? "secondary" : "ghost"}
+                    className={cn("justify-start", pathname === "/dashboard/settings" && "bg-muted")}
                     asChild
                 >
-                    <Link href={item.href}>
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {item.title}
+                    <Link href="/dashboard/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
                     </Link>
                 </Button>
-            ))}
-        </nav>
+
+                <SignOutButton>
+                    <Button
+                        variant="ghost"
+                        className="justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
+                    </Button>
+                </SignOutButton>
+            </div>
+        </div>
     )
 }
