@@ -1,43 +1,57 @@
 import { NextResponse } from "next/server"
 import { Pool } from "pg"
 
-export async function GET() {
+const connectToPort = async (connectionString: string, portOverride: number | null, name: string) => {
     let pool = null;
-    try {
-        const connectionString = process.env.DATABASE_URL;
-        if (!connectionString) throw new Error("DATABASE_URL is missing");
+    let client = null;
+    const result = { name, success: false, time: null as any, error: null as any, port: 0 };
 
-        // Parse and mask for debug
+    try {
         const url = new URL(connectionString);
-        const maskedUrl = `${url.protocol}//${url.username}:***@${url.hostname}:${url.port}${url.pathname}${url.search}`;
+        if (portOverride) {
+            url.port = portOverride.toString();
+        }
+        result.port = parseInt(url.port);
 
         pool = new Pool({
-            connectionString,
-            ssl: { rejectUnauthorized: false }, // Explicitly allow self-signed for Supabase
-            connectionTimeoutMillis: 5000,
+            connectionString: url.toString(),
+            ssl: { rejectUnauthorized: false },
+            connectionTimeoutMillis: 8000, // Increased timeout 8s
         });
 
-        const client = await pool.connect();
+        const start = Date.now();
+        client = await pool.connect();
         const res = await client.query('SELECT NOW()');
-        client.release();
-
-        return NextResponse.json({
-            status: "ok",
-            time: res.rows[0],
-            debug: { maskedUrl, port: url.port, host: url.hostname }
-        });
+        result.time = res.rows[0];
+        result.success = true;
+        result.time = (Date.now() - start) + "ms";
     } catch (e: any) {
-        return NextResponse.json({
-            status: "error",
-            message: e.message,
-            stack: e.stack,
-            code: e.code,
-            env: {
-                hasDbUrl: !!process.env.DATABASE_URL,
-                nodeEnv: process.env.NODE_ENV
-            }
-        }, { status: 500 })
+        result.error = e.message;
     } finally {
+        if (client) (client as any).release();
         if (pool) await pool.end().catch(() => { });
     }
+    return result;
+}
+
+export async function GET() {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) return NextResponse.json({ error: "DATABASE_URL missing" }, { status: 500 });
+
+    // Test both ports
+    const [test6543, test5432] = await Promise.all([
+        connectToPort(connectionString, 6543, "Transaction Pooler (6543)"),
+        connectToPort(connectionString, 5432, "Direct Session (5432)")
+    ]);
+
+    const status = (test6543.success || test5432.success) ? "partial_ok" : "error";
+
+    return NextResponse.json({
+        status,
+        results: [test6543, test5432],
+        env: {
+            nodeEnv: process.env.NODE_ENV,
+            host: new URL(connectionString).hostname
+        }
+    }, { status: status === "error" ? 500 : 200 })
 }
