@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from "@/lib/db"
-import { auth } from "@clerk/nextjs/server"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import Parser from 'rss-parser'
 import { revalidatePath } from "next/cache"
 import OpenAI from "openai"
@@ -43,8 +43,20 @@ export async function getFeeds() {
 }
 
 export async function addFeed(rawUrl: string) {
-    const { userId } = await auth()
-    if (!userId) return { success: false, error: "Unauthorized" }
+    const user = await currentUser()
+    if (!user) return { success: false, error: "Unauthorized" }
+    const userId = user.id
+
+    // User Sync / Upsert to ensure Foreign Key exists
+    await prisma.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: {
+            id: userId,
+            email: user.emailAddresses[0].emailAddress,
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || "User"
+        }
+    })
 
     let url = rawUrl.trim()
     if (!url.startsWith("http")) {
