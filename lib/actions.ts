@@ -42,9 +42,14 @@ export async function getFeeds() {
     return feeds
 }
 
-export async function addFeed(url: string) {
+export async function addFeed(rawUrl: string) {
     const { userId } = await auth()
     if (!userId) return { success: false, error: "Unauthorized" }
+
+    let url = rawUrl.trim()
+    if (!url.startsWith("http")) {
+        url = `https://${url}`
+    }
 
     try {
         console.log("Attempting to add feed:", url)
@@ -71,6 +76,9 @@ export async function addFeed(url: string) {
                 name
             }
         })
+
+        // Immediately fetch articles for the new feed so user sees data
+        await refreshFeeds()
 
         revalidatePath('/dashboard/feeds')
         return { success: true }

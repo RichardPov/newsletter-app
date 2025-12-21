@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, RefreshCw } from "lucide-react"
 import { addFeed, removeFeed } from "@/lib/actions"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 interface Feed {
     id: string
@@ -25,6 +26,7 @@ export function FeedManager({ initialFeeds }: FeedManagerProps) {
     const [feeds, setFeeds] = useState<Feed[]>(initialFeeds)
     const [newFeedUrl, setNewFeedUrl] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const router = useRouter()
 
     // Sync with server state on re-render if needed, 
     // but usually Server Actions + revalidatePath handles this effectively via parent refresh.
@@ -48,7 +50,7 @@ export function FeedManager({ initialFeeds }: FeedManagerProps) {
             if (res?.success) {
                 toast.success("Feed added successfully")
                 setNewFeedUrl("") // Changed from setNewFeed to setNewFeedUrl
-                // setIsOpen(false) // Removed as setIsOpen is not defined in this component
+                router.refresh()
             } else {
                 toast.error(res?.error || "Failed to add feed. Check the URL.")
             }
