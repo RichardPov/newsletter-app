@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db"
 import { auth } from "@clerk/nextjs/server"
 import Parser from 'rss-parser'
 import { revalidatePath } from "next/cache"
+import OpenAI from "openai"
 
 const parser = new Parser()
 
@@ -99,17 +100,71 @@ export async function refreshFeeds() {
         where: { userId, isActive: true }
     })
 
+    const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+    })
+
     let newCount = 0
 
     for (const feed of feeds) {
         try {
             const parsed = await parser.parseURL(feed.url)
 
-            for (const item of parsed.items) {
+            // Limit to top 5 most recent items per feed to avoid rate limits/cost spikes
+            const recentItems = parsed.items.slice(0, 5)
+
+            for (const item of recentItems) {
                 if (!item.link || !item.title) continue
 
-                // Basic AI Mock (later we replace this with real OpenAI call)
-                const mockViralScore = Math.floor(Math.random() * 10) + 1
+                // Check for duplicate BEFORE processing AI to save money
+                const existing = await prisma.article.findFirst({
+                    where: {
+                        userId,
+                        url: item.link
+                    }
+                })
+
+                if (existing) continue
+
+                let viralScore = 0
+                let summary = "No summary available."
+
+                // REAL AI ANALYSIS
+                if (process.env.OPENAI_API_KEY) {
+                    try {
+                        const contentToAnalyze = (item.contentSnippet || item.content || item.title).substring(0, 1000)
+
+                        const completion = await openai.chat.completions.create({
+                            model: "gpt-4o-mini",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: `You are an expert content curator for a tech newsletter. Analyze the article.
+                                    Return a JSON object with:
+                                    - "summary": A concise, engaging summary (max 2 sentences).
+                                    - "viralScore": A number between 0-10 indicating potential virality on social media (Tech/Business audience).`
+                                },
+                                {
+                                    role: "user",
+                                    content: `Title: ${item.title}\nContent: ${contentToAnalyze}`
+                                }
+                            ],
+                            response_format: { type: "json_object" }
+                        })
+
+                        const result = JSON.parse(completion.choices[0].message.content || "{}")
+                        summary = result.summary || summary
+                        viralScore = result.viralScore || 0
+
+                    } catch (aiError) {
+                        console.error("OpenAI Error:", aiError)
+                        summary = "AI analysis failed, using fallback."
+                    }
+                } else {
+                    // Fallback Mock
+                    viralScore = Math.floor(Math.random() * 10) + 1
+                    summary = "AI summary pending... (Key missing)"
+                }
 
                 try {
                     await prisma.article.create({
@@ -119,15 +174,113 @@ export async function refreshFeeds() {
                             title: item.title,
                             url: item.link,
                             content: item.contentSnippet || item.content || "",
-                            summary: "AI summary pending...", // Placeholder
+                            summary: summary,
                             publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
-                            viralScore: mockViralScore,
+                            viralScore: viralScore,
                             status: "REVIEW"
                         }
                     })
                     newCount++
                 } catch (e) {
-                    // Ignore unique constraint violations (duplicates)
+                    // Ignore unique constraint violations if they slip through
+                    continue
+                }
+            }
+        } catch (e) {
+            console.error(`Failed to parse feed ${feed.url}`, e)
+        }
+    }
+
+    revalidatePath('/dashboard/articles')
+    return { success: true, count: newCount }
+}
+
+// System-level refresh (For Cron Jobs - No Auth Required)
+export async function refreshAllFeeds() {
+    // Fetch ALL active feeds regardless of user
+    const feeds = await prisma.feed.findMany({
+        where: { isActive: true }
+    })
+
+    const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+    })
+
+    let newCount = 0
+
+    for (const feed of feeds) {
+        try {
+            const parsed = await parser.parseURL(feed.url)
+            const recentItems = parsed.items.slice(0, 5)
+
+            for (const item of recentItems) {
+                if (!item.link || !item.title) continue
+
+                // Check duplicate
+                const existing = await prisma.article.findFirst({
+                    where: {
+                        userId: feed.userId, // Use feed's owner ID
+                        url: item.link
+                    }
+                })
+
+                if (existing) continue
+
+                let viralScore = 0
+                let summary = "No summary available."
+
+                // REAL AI ANALYSIS
+                if (process.env.OPENAI_API_KEY) {
+                    try {
+                        const contentToAnalyze = (item.contentSnippet || item.content || item.title).substring(0, 1000)
+
+                        const completion = await openai.chat.completions.create({
+                            model: "gpt-4o-mini",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: `You are an expert content curator. Analyze the article.
+                                    Return a JSON object with:
+                                    - "summary": A concise summary (max 2 sentences).
+                                    - "viralScore": A number between 0-10 indicating potential virality.`
+                                },
+                                {
+                                    role: "user",
+                                    content: `Title: ${item.title}\nContent: ${contentToAnalyze}`
+                                }
+                            ],
+                            response_format: { type: "json_object" }
+                        })
+
+                        const result = JSON.parse(completion.choices[0].message.content || "{}")
+                        summary = result.summary || summary
+                        viralScore = result.viralScore || 0
+
+                    } catch (aiError) {
+                        console.error("OpenAI Error:", aiError)
+                        summary = "AI analysis failed, using fallback."
+                    }
+                } else {
+                    viralScore = Math.floor(Math.random() * 10) + 1
+                    summary = "AI summary pending... (Key missing)"
+                }
+
+                try {
+                    await prisma.article.create({
+                        data: {
+                            userId: feed.userId,
+                            feedId: feed.id,
+                            title: item.title,
+                            url: item.link,
+                            content: item.contentSnippet || item.content || "",
+                            summary: summary,
+                            publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
+                            viralScore: viralScore,
+                            status: "REVIEW"
+                        }
+                    })
+                    newCount++
+                } catch (e) {
                     continue
                 }
             }
