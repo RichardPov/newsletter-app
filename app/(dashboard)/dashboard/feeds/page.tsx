@@ -1,5 +1,7 @@
 import { getFeeds } from "@/lib/actions"
 import { FeedManager } from "@/components/feed-manager"
+
+export const dynamic = "force-dynamic"
 import { Button } from "@/components/ui/button"
 import { RefreshCw } from "lucide-react"
 

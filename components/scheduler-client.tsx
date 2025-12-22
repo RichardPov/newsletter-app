@@ -25,12 +25,12 @@ interface Post {
     content: string
     scheduledFor: Date | null
     status: string
-    article?: {
+    article: {
         title: string
-        feed?: {
+        feed: {
             name: string
-        }
-    }
+        } | null
+    } | null
 }
 
 interface SchedulerClientProps {
