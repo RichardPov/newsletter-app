@@ -57,9 +57,13 @@ export function SchedulerClient({ initialPosts }: SchedulerClientProps) {
     const monthEnd = endOfMonth(currentMonth)
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
-    // Group posts by date
+    // Separate scheduled and unscheduled posts
+    const scheduledPosts = initialPosts.filter(p => p.scheduledFor)
+    const unscheduledPosts = initialPosts.filter(p => !p.scheduledFor)
+
+    // Group scheduled posts by date
     const groupedPosts: { [key: string]: Post[] } = {}
-    initialPosts.forEach(post => {
+    scheduledPosts.forEach(post => {
         if (post.scheduledFor) {
             const dateKey = format(new Date(post.scheduledFor), 'yyyy-MM-dd')
             if (!groupedPosts[dateKey]) {
@@ -276,7 +280,62 @@ export function SchedulerClient({ initialPosts }: SchedulerClientProps) {
                     )
                 })}
 
-                {sortedDates.length === 0 && (
+                {/* Unscheduled Posts Section */}
+                {unscheduledPosts.length > 0 && (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Badge className="bg-slate-400 text-white px-3 py-1">
+                                Unscheduled ({unscheduledPosts.length})
+                            </Badge>
+                        </div>
+
+                        <div className="space-y-2">
+                            {unscheduledPosts.map(post => {
+                                const StatusIcon = statusConfig[post.status]?.icon || Circle
+
+                                return (
+                                    <Card key={post.id} className="p-4 hover:shadow-md transition-shadow border-l-4 border-l-amber-400">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex-shrink-0 flex items-center justify-center text-white font-bold">
+                                                ?
+                                            </div>
+
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+                                                                Needs scheduling
+                                                            </Badge>
+                                                        </div>
+                                                        <p className="text-sm text-slate-600 line-clamp-2">
+                                                            {post.article?.title || post.content.slice(0, 80)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                                                    <Badge variant="secondary" className={platformColors[post.platform] || ""}>
+                                                        {post.article?.feed?.name || post.platform}
+                                                    </Badge>
+
+                                                    <div className="ml-auto">
+                                                        <Button size="sm" variant="outline">
+                                                            <Calendar className="mr-2 h-4 w-4" />
+                                                            Schedule
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {sortedDates.length === 0 && unscheduledPosts.length === 0 && (
                     <div className="text-center py-12 text-slate-400">
                         <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
                         <p>No posts scheduled for this month</p>
