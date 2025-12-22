@@ -67,6 +67,7 @@ model Article {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts       Post[]   // Posts derived from this article
   newsletters Newsletter[]
+  articleLinks ArticleNewsletter[]
 
 
   @@unique([userId, url]) // Prevent duplicate articles from the same URL for the same user
@@ -97,10 +98,31 @@ model Newsletter {
   title     String // Subject Line
   intro     String?  @db.Text
   outro     String?  @db.Text
+  
+  // Customization fields
+  logoUrl     String?
+  headerColor String   @default("#10b981")
+  textColor   String   @default("#1f2937")
+  footerText  String?  @db.Text
+  
   status    String   @default("DRAFT") // DRAFT, SENT, ARCHIVED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   articles Article[]
+  articleLinks ArticleNewsletter[]
+}
+
+// Junction table for newsletter article ordering
+model ArticleNewsletter {
+  id           String @id @default(cuid())
+  newsletterId String
+  articleId    String
+  order        Int    @default(0)
+
+  newsletter Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  article    Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([newsletterId, articleId])
 }
