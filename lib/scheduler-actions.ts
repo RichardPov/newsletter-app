@@ -95,6 +95,7 @@ export async function schedulePost(postId: string, scheduledFor: Date) {
     })
 
     revalidatePath('/dashboard/scheduler')
+    revalidatePath('/dashboard/social')
     return { success: true }
 }
 

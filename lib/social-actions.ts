@@ -166,6 +166,7 @@ export async function updatePost(postId: string, data: {
     })
 
     revalidatePath('/dashboard/social')
+    revalidatePath('/dashboard/scheduler')
     return { success: true }
 }
 
