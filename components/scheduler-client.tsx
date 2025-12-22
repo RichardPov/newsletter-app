@@ -9,6 +9,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Calendar as CalendarIcon,
+    Calendar,
     Clock,
     User,
     MoreVertical,
