@@ -10,7 +10,15 @@ const openai = new OpenAI({
 })
 
 // Generate social media posts from article
-export async function generateSocialPosts(articleId: string) {
+export async function generateSocialPosts(
+    articleId: string,
+    options?: {
+        linkedinTone?: string
+        linkedinStyle?: string
+        twitterTone?: string
+        twitterStyle?: string
+    }
+) {
     const { userId } = await auth()
     if (!userId) throw new Error("Unauthorized")
 
@@ -20,14 +28,35 @@ export async function generateSocialPosts(articleId: string) {
 
     if (!article) throw new Error("Article not found")
 
+    // Get custom tone if "custom" is selected
+    let customTone = null
+    if (options?.linkedinTone === 'custom' || options?.twitterTone === 'custom') {
+        customTone = await prisma.toneProfile.findFirst({
+            where: { userId }
+        })
+    }
+
     try {
-        // Generate Twitter thread
+        // Build LinkedIn prompt with tone and style
+        const linkedinTone = options?.linkedinTone === 'custom'
+            ? `${customTone?.name} (${customTone?.style})`
+            : options?.linkedinTone || 'professional'
+        const linkedinStyle = options?.linkedinStyle || 'professional'
+
+        const linkedinSystemPrompt = `You are a LinkedIn content expert. Create an engaging post with these specifications:
+- Tone: ${linkedinTone}
+- Style: ${linkedinStyle}
+${linkedinStyle === 'viral' ? '- Use strong hooks, emotion, and controversy' : ''}
+${linkedinStyle === 'hooky' ? '- Start with curiosity gap or provocative question' : ''}
+${linkedinStyle === 'story' ? '- Use narrative arc with beginning, middle, end' : ''}
+Format with line breaks for readability. Keep it professional yet engaging.`
+
         const twitterCompletion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
                 {
                     role: "system",
-                    content: "You are a social media expert. Create engaging Twitter/X threads from articles. Format: Thread of 3-5 tweets, numbered. First tweet is the hook, last is CTA. Keep it conversational and punchy."
+                    content: twitterSystemPrompt
                 },
                 {
                     role: "user",
@@ -46,7 +75,7 @@ export async function generateSocialPosts(articleId: string) {
             messages: [
                 {
                     role: "system",
-                    content: "You are a professional LinkedIn content creator. Create engaging, thought-provoking posts from articles. Include: Hook, 2-3 key insights, call to action. Use line breaks for readability. Professional but conversational tone."
+                    content: linkedinSystemPrompt
                 },
                 {
                     role: "user",

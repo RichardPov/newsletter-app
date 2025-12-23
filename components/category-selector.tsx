@@ -61,9 +61,22 @@ export function CategorySelector({ categories, subscribedCategories: initialSubs
         return Icon ? <Icon className="h-6 w-6" /> : <Icons.Circle className="h-6 w-6" />
     }
 
+    // Sort categories: subscribed first, then alphabetically
+    const sortedCategories = [...categories].sort((a, b) => {
+        const aSubscribed = subscribedCategories.includes(a.id)
+        const bSubscribed = subscribedCategories.includes(b.id)
+
+        // Subscribed categories come first
+        if (aSubscribed && !bSubscribed) return -1
+        if (!aSubscribed && bSubscribed) return 1
+
+        // Within each group, sort alphabetically
+        return a.name.localeCompare(b.name)
+    })
+
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {categories.map((category) => {
+            {sortedCategories.map((category) => {
                 const isSubscribed = subscribedCategories.includes(category.id)
                 const isLoading = loading === category.id
 
