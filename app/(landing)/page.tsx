@@ -83,11 +83,11 @@ export default function LandingPage() {
         <div className="container px-4 md:px-6 mx-auto relative z-10">
           <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl/none text-slate-900 leading-tight mb-6">
-              Clone your voice. <br className="hidden md:inline" />
-              <span className="text-emerald-500">Automate your growth.</span>
+              Never write a <br className="hidden md:inline" />
+              <span className="text-emerald-500">social post from scratch again.</span>
             </h1>
             <p className="mx-auto max-w-[800px] text-slate-600 md:text-xl/relaxed lg:text-2xl/relaxed font-light mb-6">
-              NewsWeave curates trending stories from your RSS feeds and automatically writes engaging newsletters, Twitter threads, and LinkedIn posts in your unique style.
+              Select your favorite segments, let AI generate viral LinkedIn & Twitter posts from top articles, and schedule them to your planner in seconds.
             </p>
             <HeroAnimation />
             <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center pt-10">
@@ -142,9 +142,9 @@ export default function LandingPage() {
               <div className="bg-emerald-100 p-3 rounded-xl mb-2">
                 <Zap className="h-6 w-6 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">AI Tone Cloning</h3>
+              <h3 className="text-xl font-bold text-slate-900">Instant Content Generation</h3>
               <p className="text-slate-600 leading-relaxed">
-                NewsWeave learns your writing style from your previous work. We'll write your newsletters and social posts exactly how you would.
+                Turn any article into a high-performing LinkedIn post or Twitter thread with one click. Choose from multiple tones and styles.
               </p>
             </div>
             {/* Feature 2 */}
@@ -152,9 +152,9 @@ export default function LandingPage() {
               <div className="bg-emerald-100 p-3 rounded-xl mb-2">
                 <Globe className="h-6 w-6 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Multi-Source Feeds</h3>
+              <h3 className="text-xl font-bold text-slate-900">Curated Segments</h3>
               <p className="text-slate-600 leading-relaxed">
-                Connect RSS feeds from TechCrunch, The Verge, or any blog. We'll monitor them 24/7 and pick the best stories.
+                No more RSS hunting. Select from 15+ professionally curated segments like Tech, Crypto, or Business to find the best stories.
               </p>
             </div>
             {/* Feature 3 */}
@@ -176,7 +176,7 @@ export default function LandingPage() {
         <div className="container px-4 md:px-6 mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Why use an AI weekly newsletter generator?
+              Why use an AI social media generator?
             </h2>
           </div>
           <div className="grid gap-12 sm:grid-cols-3 max-w-6xl mx-auto text-center">
@@ -184,18 +184,18 @@ export default function LandingPage() {
               <div className="p-4 bg-emerald-800/50 rounded-2xl shadow-sm mb-2 backdrop-blur-sm border border-emerald-800">
                 <Sparkles className="h-10 w-10 text-emerald-300" />
               </div>
-              <h3 className="text-xl font-bold text-white">Generate ideas</h3>
+              <h3 className="text-xl font-bold text-white">Never run out of ideas</h3>
               <p className="text-emerald-100 leading-relaxed">
-                Create weekly newsletters with AI-powered suggestions based on your keywords.
+                Get a constant stream of trending topics from your selected segments, ready to be transformed into content.
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4">
               <div className="p-4 bg-emerald-800/50 rounded-2xl shadow-sm mb-2 backdrop-blur-sm border border-emerald-800">
                 <Layout className="h-10 w-10 text-emerald-300" />
               </div>
-              <h3 className="text-xl font-bold text-white">Add structure to your work</h3>
+              <h3 className="text-xl font-bold text-white">Professional & Viral Styles</h3>
               <p className="text-emerald-100 leading-relaxed">
-                Get well-structured output that provides a strong foundation for your newsletter.
+                Choose between professional insights, viral hooks, or storytelling modes for both LinkedIn and Twitter.
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4">
@@ -204,7 +204,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-bold text-white">Save time</h3>
               <p className="text-emerald-100 leading-relaxed">
-                Save time and speed up your workflow with AI-powered newsletter generation.
+                Cut your social media management time by 90%. Curate, generate, and plan in one seamless workflow.
               </p>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function LandingPage() {
         <div className="container px-4 md:px-6 mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              The AI weekly newsletter generator for everyone
+              The AI social media tool for everyone
             </h2>
           </div>
           <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
@@ -232,7 +232,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Indie Hacker</h3>
               <p className="text-slate-600">
-                Ship features, not content. Automate your build-in-public updates.
+                Build authority in your niche without spending hours writing updates manually.
               </p>
             </div>
             {/* Case 2 */}
@@ -274,7 +274,7 @@ export default function LandingPage() {
         <div className="container px-4 md:px-6 mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              How to use NewsWeave's AI weekly newsletter generator
+              How to use NewsWeave's AI social generator
             </h2>
           </div>
 
@@ -291,7 +291,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mt-4">Share settings</h3>
                 <p className="text-slate-600 leading-relaxed max-w-xs">
-                  Connect your favorite RSS feeds and tell us the vibe you want for your audience.
+                  Select the industry segments that matter to you. We curate the top news sources automatically.
                 </p>
               </div>
 
@@ -303,7 +303,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mt-4">AI Drafting</h3>
                 <p className="text-slate-600 leading-relaxed max-w-xs">
-                  We verify sources and rewrite stories to match your unique tone automatically.
+                  Pick an article and let AI generate optimized posts for LinkedIn (Professional, Story) and Twitter (Thread, Hook).
                 </p>
               </div>
 
@@ -315,7 +315,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mt-4">Send & Grow</h3>
                 <p className="text-slate-600 leading-relaxed max-w-xs">
-                  Review the draft, drag & drop final touches, and export to your email tool.
+                  Review your posts and add them directly to your planner. Your social calendar sorted in minutes.
                 </p>
               </div>
             </div>
@@ -323,7 +323,7 @@ export default function LandingPage() {
 
           <div className="mt-12 text-center">
             <Button className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 px-8 rounded-full text-lg shadow-md" asChild>
-              <Link href="/dashboard">Try weekly newsletter generator</Link>
+              <Link href="/dashboard">Try social generator for free</Link>
             </Button>
           </div>
         </div>
@@ -334,21 +334,21 @@ export default function LandingPage() {
         <div className="container px-4 md:px-6 mx-auto max-w-3xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              AI weekly newsletter generator FAQs
+              AI social media generator FAQs
             </h2>
           </div>
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
-                <AccordionTrigger>What is an AI weekly newsletter generator?</AccordionTrigger>
+                <AccordionTrigger>What is an AI social media generator?</AccordionTrigger>
                 <AccordionContent>
-                  An AI weekly newsletter generator is a tool that uses artificial intelligence to curate, summarize, and format content for your newsletters automatically.
+                  An AI social media generator creates professional LinkedIn posts and Twitter threads from curated news articles, saving you hours of writing time.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-2">
-                <AccordionTrigger>How does an AI newsletter generator work?</AccordionTrigger>
+                <AccordionTrigger>How does it generate content?</AccordionTrigger>
                 <AccordionContent>
-                  It connects to your data sources (like RSS feeds), analyzes the content using LLMs, and rewrites it according to your specified tone and style preferences.
+                  It analyzes the context of your chosen article and applies proven social media frameworks (like hooks, storytelling, or threads) to create viral-ready content.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3">
@@ -367,7 +367,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-12 text-center">
             <Button className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 px-8 rounded-full text-lg shadow-md" asChild>
-              <Link href="/dashboard">Generate a newsletter</Link>
+              <Link href="/dashboard">Generate social posts</Link>
             </Button>
           </div>
         </div>
@@ -378,7 +378,7 @@ export default function LandingPage() {
         <div className="container px-4 md:px-6 mx-auto text-center">
           <div className="max-w-3xl mx-auto bg-emerald-50 rounded-3xl p-12 lg:p-16">
             <h2 className="text-3xl font-bold tracking-tight text-emerald-950 sm:text-4xl mb-6">
-              Ready to 10x your newsletter growth?
+              Ready to 10x your social presence?
             </h2>
             <p className="text-lg text-emerald-800/80 mb-8 max-w-2xl mx-auto">
               Join 10,000+ curators who save 15 hours a week with NewsWeave.
