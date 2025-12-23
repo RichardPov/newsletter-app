@@ -93,7 +93,7 @@ export function CategorySelector({ categories, subscribedCategories: initialSubs
     })
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {sortedCategories.map((category) => {
                 const isSubscribed = subscribedCategories.includes(category.id)
                 const isLoading = loading === category.id
@@ -102,56 +102,78 @@ export function CategorySelector({ categories, subscribedCategories: initialSubs
                     <Card
                         key={category.id}
                         className={cn(
-                            "cursor-pointer transition-all hover:shadow-lg",
-                            isSubscribed && "ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
+                            "relative flex flex-col transition-all duration-300 hover:shadow-xl border-2",
+                            isSubscribed
+                                ? "border-emerald-500/50 bg-emerald-50/10 dark:bsg-emerald-950/10"
+                                : "border-transparent hover:border-slate-200 dark:hover:border-slate-800"
                         )}
-                        onClick={() => handleCategoryClick(category.id)}
+                        onClick={() => !isSubscribed && handleCategoryClick(category.id)}
                     >
-                        <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                                <div className={cn(
-                                    "p-3 rounded-lg",
-                                    isSubscribed
-                                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
-                                        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                                )}>
-                                    {getIcon(category.icon)}
-                                </div>
-                                {isSubscribed ? (
-                                    <div className="flex gap-2">
-                                        <Badge className="bg-emerald-500">
-                                            <Check className="h-3 w-3 mr-1" />
-                                            Active
-                                        </Badge>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-6 px-2 text-xs"
-                                            onClick={(e) => handleUnsubscribe(category.id, e)}
-                                        >
-                                            Unsubscribe
-                                        </Button>
-                                    </div>
+                        {/* Active Label - Top Right */}
+                        {isSubscribed && (
+                            <div className="absolute top-3 right-3 z-10">
+                                <Badge className="bg-emerald-500 hover:bg-emerald-600 shadow-sm">
+                                    <Check className="h-3 w-3 mr-1" />
+                                    Active
+                                </Badge>
+                            </div>
+                        )}
+
+                        <CardHeader className="flex-1 pb-4">
+                            <div className={cn(
+                                "w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors",
+                                isSubscribed
+                                    ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400"
+                                    : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                            )}>
+                                {isLoading ? (
+                                    <Loader2 className="h-6 w-6 animate-spin" />
                                 ) : (
-                                    isLoading && (
-                                        <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
-                                    )
+                                    getIcon(category.icon)
                                 )}
                             </div>
-                            <CardTitle className="text-lg mt-3">{category.name}</CardTitle>
-                            <CardDescription className="text-sm">
+
+                            <CardTitle className="text-xl font-bold">{category.name}</CardTitle>
+                            <CardDescription className="line-clamp-2 mt-2 leading-relaxed">
                                 {category.description}
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-0">
-                            <div className="flex flex-wrap gap-1">
+
+                        <CardContent className="pb-2">
+                            {/* Feeds Preview */}
+                            <div className="flex flex-wrap gap-2">
                                 {category.feeds.slice(0, 3).map((feed, idx) => (
-                                    <span key={idx} className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                                    <span
+                                        key={idx}
+                                        className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground bg-muted/50 px-2 py-1 rounded-md"
+                                    >
                                         {feed.name}
                                     </span>
                                 ))}
                             </div>
                         </CardContent>
+
+                        <CardFooter className="pt-4 mt-auto border-t bg-muted/5">
+                            {isSubscribed ? (
+                                <Button
+                                    variant="ghost"
+                                    className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                    onClick={(e) => handleUnsubscribe(category.id, e)}
+                                    disabled={!!loading}
+                                >
+                                    Unsubscribe
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    className="w-full hover:border-emerald-500 hover:text-emerald-600"
+                                    onClick={() => handleCategoryClick(category.id)}
+                                    disabled={!!loading}
+                                >
+                                    Subscribe
+                                </Button>
+                            )}
+                        </CardFooter>
                     </Card>
                 )
             })}
