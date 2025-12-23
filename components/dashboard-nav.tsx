@@ -25,8 +25,8 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
             icon: LayoutDashboard,
         },
         {
-            href: "/dashboard/feeds",
-            title: "RSS Feeds",
+            href: "/dashboard/discover",
+            title: "Discover Content",
             icon: Radio,
         },
         {
