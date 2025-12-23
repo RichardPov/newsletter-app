@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Check, Loader2 } from "lucide-react"
@@ -156,8 +156,8 @@ export function CategorySelector({ categories, subscribedCategories: initialSubs
                         <CardFooter className="pt-4 mt-auto border-t bg-muted/5">
                             {isSubscribed ? (
                                 <Button
-                                    variant="ghost"
-                                    className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                    variant="destructive"
+                                    className="w-full shadow-sm hover:bg-red-600"
                                     onClick={(e) => handleUnsubscribe(category.id, e)}
                                     disabled={!!loading}
                                 >
@@ -166,7 +166,7 @@ export function CategorySelector({ categories, subscribedCategories: initialSubs
                             ) : (
                                 <Button
                                     variant="outline"
-                                    className="w-full hover:border-emerald-500 hover:text-emerald-600"
+                                    className="w-full border-slate-200 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:border-slate-800 dark:hover:bg-emerald-950/20 transition-all"
                                     onClick={() => handleCategoryClick(category.id)}
                                     disabled={!!loading}
                                 >
