@@ -29,12 +29,30 @@ export function CategorySelector({ categories, subscribedCategories: initialSubs
     const [loading, setLoading] = useState<string | null>(null)
     const router = useRouter()
 
+    const handleUnsubscribe = async (categoryId: string, e: React.MouseEvent) => {
+        e.stopPropagation()
+
+        const category = categories.find(c => c.id === categoryId)
+        if (!confirm(`Unsubscribe from ${category?.name}? This will remove all associated feeds.`)) return
+
+        setLoading(categoryId)
+        try {
+            const result = await unsubscribeFromCategory(categoryId)
+            setSubscribedCategories(subscribedCategories.filter(id => id !== categoryId))
+            toast.success(`Unsubscribed from ${category?.name}`)
+            router.refresh()
+        } catch (error) {
+            toast.error("Failed to unsubscribe")
+        } finally {
+            setLoading(null)
+        }
+    }
+
     const handleCategoryClick = async (categoryId: string) => {
         const isSubscribed = subscribedCategories.includes(categoryId)
 
         if (isSubscribed) {
-            toast.info("Unsubscribe from category coming soon")
-            return
+            return // Don't re-subscribe
         }
 
         setLoading(categoryId)
@@ -99,14 +117,25 @@ export function CategorySelector({ categories, subscribedCategories: initialSubs
                                 )}>
                                     {getIcon(category.icon)}
                                 </div>
-                                {isSubscribed && (
-                                    <Badge className="bg-emerald-500">
-                                        <Check className="h-3 w-3 mr-1" />
-                                        Active
-                                    </Badge>
-                                )}
-                                {isLoading && (
-                                    <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
+                                {isSubscribed ? (
+                                    <div className="flex gap-2">
+                                        <Badge className="bg-emerald-500">
+                                            <Check className="h-3 w-3 mr-1" />
+                                            Active
+                                        </Badge>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-6 px-2 text-xs"
+                                            onClick={(e) => handleUnsubscribe(category.id, e)}
+                                        >
+                                            Unsubscribe
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    isLoading && (
+                                        <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
+                                    )
                                 )}
                             </div>
                             <CardTitle className="text-lg mt-3">{category.name}</CardTitle>
