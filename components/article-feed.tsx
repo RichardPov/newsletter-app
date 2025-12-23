@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Share2, FileText, CheckCircle, RefreshCw, Calendar as CalendarIcon, Loader2, Sparkles, Heart } from "lucide-react"
+import { Share2, FileText, CheckCircle, RefreshCw, Calendar as CalendarIcon, Loader2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import {
     Dialog,
@@ -28,8 +28,6 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { refreshFeeds } from "@/lib/actions"
 import { useAppStore } from "@/lib/store"
-import { toggleArticleLike } from "@/lib/category-actions"
-import { useRouter } from "next/navigation"
 
 // Type definition matching the Prisma result + UI needs
 export interface ArticleData {
@@ -39,7 +37,6 @@ export interface ArticleData {
     summary: string | null
     publishedAt: Date
     viralScore: number
-    isLiked?: boolean
     feed: {
         name: string
     } | null
@@ -131,10 +128,6 @@ export function ArticleFeed({ initialArticles }: ArticleFeedProps) {
             <Tabs defaultValue="all" className="w-full">
                 <TabsList>
                     <TabsTrigger value="all">All Articles</TabsTrigger>
-                    <TabsTrigger value="liked">
-                        <Heart className="mr-2 h-4 w-4 fill-red-500 text-red-500" />
-                        Liked ({articles.filter(a => a.isLiked).length})
-                    </TabsTrigger>
                     <TabsTrigger value="saved">Saved</TabsTrigger>
                 </TabsList>
 
@@ -150,26 +143,9 @@ export function ArticleFeed({ initialArticles }: ArticleFeedProps) {
                                     <CardHeader>
                                         <div className="flex justify-between items-start mb-2">
                                             <Badge variant="secondary">{article.feed?.name || "RSS"}</Badge>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    onClick={() => handleLike(article.id)}
-                                                >
-                                                    <Heart
-                                                        className={cn(
-                                                            "h-4 w-4 transition-colors",
-                                                            article.isLiked
-                                                                ? "fill-red-500 text-red-500"
-                                                                : "text-slate-400 hover:text-red-500"
-                                                        )}
-                                                    />
-                                                </Button>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {new Date(article.publishedAt).toLocaleDateString()}
-                                                </span>
-                                            </div>
+                                            <span className="text-xs text-muted-foreground">
+                                                {new Date(article.publishedAt).toLocaleDateString()}
+                                            </span>
                                         </div>
                                         <CardTitle className="leading-snug text-lg line-clamp-2">
                                             <a href={article.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
@@ -185,6 +161,13 @@ export function ArticleFeed({ initialArticles }: ArticleFeedProps) {
                                                 ) : article.summary}
                                             </p>
                                         </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-xs font-medium">
+                                                <span>Viral Score</span>
+                                                <span>{article.viralScore}/10</span>
+                                            </div>
+                                            <Progress value={article.viralScore * 10} className="h-2" />
+                                        </div>
                                     </CardContent>
                                     <CardFooter className="flex gap-2">
                                         <Button className="flex-1" variant="default">
@@ -199,228 +182,162 @@ export function ArticleFeed({ initialArticles }: ArticleFeedProps) {
                         </div>
                     )}
                 </TabsContent>
+            </Tabs>
 
-                <TabsContent value="liked" className="mt-6">
-                    {articles.filter(a => a.isLiked).length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground border rounded-lg border-dashed">
-                            <Heart className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                            <p>No liked articles yet</p>
-                            <p className="text-sm mt-2">Click the heart icon on articles you want to save</p>
-                        </div>
-                    ) : (
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {articles.filter(a => a.isLiked).map((article) => (
-                                <Card key={article.id} className="flex flex-col border-l-4 border-l-red-500">
-                                    <CardHeader>
-                                        <div className="flex justify-between items-start mb-2">
-                                            <Badge variant="secondary">{article.feed?.name || "RSS"}</Badge>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    onClick={() => handleLike(article.id)}
-                                                >
-                                                    <Heart className="h-4 w-4 fill-red-500 text-red-500" />
-                                                </Button>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {new Date(article.publishedAt).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <CardTitle className="leading-snug text-lg line-clamp-2">
-                                            <a href={article.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                {article.title}
-                                            </a>
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="flex-1">
-                                        <p className="text-sm text-muted-foreground line-clamp-3">
-                                            {article.summary || ""}
-                                        </p>
-                                    </CardContent>
-                                    <CardFooter className="flex gap-2">
-                                        <Button
-                                            className="flex-1"
-                                            variant="default"
-                                            onClick={() => handleGenerateSocial(article.id)}
-                                            disabled={generatingPost === article.id}
-                                        >
-                                            {generatingPost === article.id ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    Generating...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Sparkles className="mr-2 h-4 w-4" />
-                                                    Generate Posts
-                                                </>
-                                            )}
+            {/* Social Media Preview Article Dialog */}
+            <Dialog open={isSocialOpen} onOpenChange={setIsSocialOpen}>
+                <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col p-0">
+                    <DialogHeader className="px-6 py-4 border-b">
+                        <DialogTitle>Social Media Generator</DialogTitle>
+                        <DialogDescription>
+                            AI-generated posts based on "{selectedArticle?.title}"
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <Tabs defaultValue="linkedin">
+                            <TabsList className="grid w-full grid-cols-2 mb-4">
+                                <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
+                                <TabsTrigger value="twitter">Twitter / X</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="linkedin" className="space-y-4 m-0">
+                                <div className="space-y-2">
+                                    <Label>Tone of Voice</Label>
+                                    <Select value={linkedinTone} onValueChange={setLinkedinTone}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="professional">Professional & Insightful</SelectItem>
+                                            <SelectItem value="casual">Casual & Storytelling</SelectItem>
+                                            <SelectItem value="educational">Educational & How-to</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="rounded-md bg-muted p-4 text-sm whitespace-pre-wrap">
+                                    {linkedinTone === "professional" && (
+                                        <>
+                                            🚀 <strong>New Insights on this topic</strong>{"\n\n"}
+                                            I just read "{selectedArticle?.title}" and found it fascinating.{"\n\n"}
+                                            {selectedArticle?.summary}{"\n\n"}
+                                            What are your thoughts? #Tech #Innovation
+                                        </>
+                                    )}
+                                    {/* Simplified templates for MVP */}
+                                    {linkedinTone !== "professional" && "Content generation pending..."}
+                                </div>
+
+                                <div className="space-y-2">
+                                    {!linkedinConnected ? (
+                                        <Button className="w-full bg-[#0077b5] hover:bg-[#005e93] text-white" onClick={() => setLinkedinConnected(true)}>
+                                            Connect LinkedIn Account
                                         </Button>
-                                    </CardFooter>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                </TabsContent>
-
-                <TabsContent value="saved" className="mt-6">
-
-                    {/* Social Media Preview Article Dialog */}
-                    <Dialog open={isSocialOpen} onOpenChange={setIsSocialOpen}>
-                        <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col p-0">
-                            <DialogHeader className="px-6 py-4 border-b">
-                                <DialogTitle>Social Media Generator</DialogTitle>
-                                <DialogDescription>
-                                    AI-generated posts based on "{selectedArticle?.title}"
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="flex-1 overflow-y-auto p-6">
-                                <Tabs defaultValue="linkedin">
-                                    <TabsList className="grid w-full grid-cols-2 mb-4">
-                                        <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
-                                        <TabsTrigger value="twitter">Twitter / X</TabsTrigger>
-                                    </TabsList>
-
-                                    <TabsContent value="linkedin" className="space-y-4 m-0">
-                                        <div className="space-y-2">
-                                            <Label>Tone of Voice</Label>
-                                            <Select value={linkedinTone} onValueChange={setLinkedinTone}>
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="professional">Professional & Insightful</SelectItem>
-                                                    <SelectItem value="casual">Casual & Storytelling</SelectItem>
-                                                    <SelectItem value="educational">Educational & How-to</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="rounded-md bg-muted p-4 text-sm whitespace-pre-wrap">
-                                            {linkedinTone === "professional" && (
-                                                <>
-                                                    🚀 <strong>New Insights on this topic</strong>{"\n\n"}
-                                                    I just read "{selectedArticle?.title}" and found it fascinating.{"\n\n"}
-                                                    {selectedArticle?.summary}{"\n\n"}
-                                                    What are your thoughts? #Tech #Innovation
-                                                </>
-                                            )}
-                                            {/* Simplified templates for MVP */}
-                                            {linkedinTone !== "professional" && "Content generation pending..."}
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            {!linkedinConnected ? (
-                                                <Button className="w-full bg-[#0077b5] hover:bg-[#005e93] text-white" onClick={() => setLinkedinConnected(true)}>
-                                                    Connect LinkedIn Account
-                                                </Button>
-                                            ) : (
+                                    ) : (
+                                        <Button
+                                            className="w-full bg-[#0077b5] hover:bg-[#005e93] text-white"
+                                            disabled={isPosting}
+                                            onClick={() => handlePost('linkedin')}
+                                        >
+                                            {isPosting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</> : "Post to LinkedIn Now"}
+                                        </Button>
+                                    )}
+                                    {/* Planner Integration */}
+                                    <div className="flex gap-2">
+                                        <Popover>
+                                            <PopoverTrigger asChild>
                                                 <Button
-                                                    className="w-full bg-[#0077b5] hover:bg-[#005e93] text-white"
-                                                    disabled={isPosting}
-                                                    onClick={() => handlePost('linkedin')}
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "flex-1 justify-start text-left font-normal",
+                                                        !scheduleDate && "text-muted-foreground"
+                                                    )}
                                                 >
-                                                    {isPosting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</> : "Post to LinkedIn Now"}
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {scheduleDate ? scheduleDate.toLocaleDateString() : <span>Pick a date</span>}
                                                 </Button>
-                                            )}
-                                            {/* Planner Integration */}
-                                            <div className="flex gap-2">
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                            variant={"outline"}
-                                                            className={cn(
-                                                                "flex-1 justify-start text-left font-normal",
-                                                                !scheduleDate && "text-muted-foreground"
-                                                            )}
-                                                        >
-                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                            {scheduleDate ? scheduleDate.toLocaleDateString() : <span>Pick a date</span>}
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0" align="start">
-                                                        <Calendar
-                                                            mode="single"
-                                                            selected={scheduleDate}
-                                                            onSelect={setScheduleDate}
-                                                            initialFocus
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <Button variant="secondary" onClick={() => handleSchedule('linkedin')}>
-                                                    Schedule in Planner
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </TabsContent>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={scheduleDate}
+                                                    onSelect={setScheduleDate}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <Button variant="secondary" onClick={() => handleSchedule('linkedin')}>
+                                            Schedule in Planner
+                                        </Button>
+                                    </div>
+                                </div>
+                            </TabsContent>
 
-                                    <TabsContent value="twitter" className="space-y-4 m-0">
-                                        <div className="space-y-2">
-                                            <Label>Thread Style</Label>
-                                            <Select value={twitterTone} onValueChange={setTwitterTone}>
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="hooky">Viral / Hooky</SelectItem>
-                                                    <SelectItem value="direct">Direct / News</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="rounded-md bg-muted p-4 text-sm whitespace-pre-wrap">
-                                            🧵 {selectedArticle?.title}{"\n\n"}
-                                            {selectedArticle?.summary ? selectedArticle.summary.substring(0, 100) + "..." : "Check this out."}
-                                        </div>
+                            <TabsContent value="twitter" className="space-y-4 m-0">
+                                <div className="space-y-2">
+                                    <Label>Thread Style</Label>
+                                    <Select value={twitterTone} onValueChange={setTwitterTone}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="hooky">Viral / Hooky</SelectItem>
+                                            <SelectItem value="direct">Direct / News</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="rounded-md bg-muted p-4 text-sm whitespace-pre-wrap">
+                                    🧵 {selectedArticle?.title}{"\n\n"}
+                                    {selectedArticle?.summary ? selectedArticle.summary.substring(0, 100) + "..." : "Check this out."}
+                                </div>
 
-                                        <div className="space-y-2">
-                                            {!twitterConnected ? (
-                                                <Button className="w-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200" onClick={() => setTwitterConnected(true)}>
-                                                    Connect X (Twitter) Account
-                                                </Button>
-                                            ) : (
+                                <div className="space-y-2">
+                                    {!twitterConnected ? (
+                                        <Button className="w-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200" onClick={() => setTwitterConnected(true)}>
+                                            Connect X (Twitter) Account
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            className="w-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+                                            disabled={isPosting}
+                                            onClick={() => handlePost('twitter')}
+                                        >
+                                            {isPosting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</> : "Post to X Now"}
+                                        </Button>
+                                    )}
+                                    {/* Planner Integration */}
+                                    <div className="flex gap-2">
+                                        <Popover>
+                                            <PopoverTrigger asChild>
                                                 <Button
-                                                    className="w-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-                                                    disabled={isPosting}
-                                                    onClick={() => handlePost('twitter')}
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "flex-1 justify-start text-left font-normal",
+                                                        !scheduleDate && "text-muted-foreground"
+                                                    )}
                                                 >
-                                                    {isPosting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</> : "Post to X Now"}
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {scheduleDate ? scheduleDate.toLocaleDateString() : <span>Pick a date</span>}
                                                 </Button>
-                                            )}
-                                            {/* Planner Integration */}
-                                            <div className="flex gap-2">
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                            variant={"outline"}
-                                                            className={cn(
-                                                                "flex-1 justify-start text-left font-normal",
-                                                                !scheduleDate && "text-muted-foreground"
-                                                            )}
-                                                        >
-                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                            {scheduleDate ? scheduleDate.toLocaleDateString() : <span>Pick a date</span>}
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0" align="start">
-                                                        <Calendar
-                                                            mode="single"
-                                                            selected={scheduleDate}
-                                                            onSelect={setScheduleDate}
-                                                            initialFocus
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <Button variant="secondary" onClick={() => handleSchedule('twitter')}>
-                                                    Schedule in Planner
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </TabsContent>
-                                </Tabs>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-                )
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={scheduleDate}
+                                                    onSelect={setScheduleDate}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <Button variant="secondary" onClick={() => handleSchedule('twitter')}>
+                                            Schedule in Planner
+                                        </Button>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div>
+    )
 }
