@@ -46,6 +46,7 @@ model Feed {
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   articles Article[]
+  category String?  // Category identifier
 
   @@index([userId])
 }
@@ -61,6 +62,7 @@ model Article {
   publishedAt DateTime
   viralScore  Int      @default(0)
   status      String   @default("REVIEW") // REVIEW, SAVED, DISMISSED
+  isLiked     Boolean  @default(false) // Like functionality
   createdAt   DateTime @default(now())
   
   feed        Feed?    @relation(fields: [feedId], references: [id], onDelete: SetNull)

@@ -42,7 +42,7 @@ export async function getFeeds() {
     return feeds
 }
 
-export async function addFeed(rawUrl: string) {
+export async function addFeed(rawUrl: string, category?: string) {
     const user = await currentUser()
     if (!user) return { success: false, error: "Unauthorized" }
     const userId = user.id
@@ -66,14 +66,7 @@ export async function addFeed(rawUrl: string) {
     try {
         console.log("Attempting to add feed:", url)
 
-        // 1. Validate RSS URL existence/reachability first
-        // Simple fetch check before full parse to fail fast on network issues
-        /*
-        const response = await fetch(url, { method: 'HEAD' });
-        if (!response.ok) throw new Error(`URL reachable but returned ${response.status}`);
-        */
-
-        // 2. Parse RSS
+        // Parse RSS
         const feed = await parser.parseURL(url)
         console.log("RSS Parsed, title:", feed.title)
 
@@ -85,7 +78,8 @@ export async function addFeed(rawUrl: string) {
             data: {
                 userId,
                 url,
-                name
+                name,
+                category  // Add category if provided
             }
         })
 
@@ -93,6 +87,7 @@ export async function addFeed(rawUrl: string) {
         await refreshFeeds()
 
         revalidatePath('/dashboard/feeds')
+        revalidatePath('/dashboard/discover')
         return { success: true }
     } catch (e: any) {
         console.error("addFeed error:", e)
