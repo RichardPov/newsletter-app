@@ -51,6 +51,22 @@ ${linkedinStyle === 'hooky' ? '- Start with curiosity gap or provocative questio
 ${linkedinStyle === 'story' ? '- Use narrative arc with beginning, middle, end' : ''}
 Format with line breaks for readability. Keep it professional yet engaging.`
 
+        // Build Twitter prompt with tone and style
+        const twitterTone = options?.twitterTone === 'custom'
+            ? `${customTone?.name} (${customTone?.style})`
+            : options?.twitterTone || 'witty'
+        const twitterStyle = options?.twitterStyle || 'hooky'
+
+        const twitterSystemPrompt = `You are a Twitter/X content expert. Create an engaging thread with these specifications:
+- Tone: ${twitterTone}
+- Style: ${twitterStyle}
+${twitterStyle === 'viral' ? '- Use strong hooks, emotional triggers, and controversy' : ''}
+${twitterStyle === 'hooky' ? '- Start with curiosity gap or provocative question' : ''}
+${twitterStyle === 'thread' ? '- Create 3-5 tweet thread with numbered format' : ''}
+${twitterStyle === 'story' ? '- Use narrative storytelling across tweets' : ''}
+Format as a thread. First tweet is the hook, last tweet includes a CTA. Keep tweets punchy (under 280 chars).`
+
+        // Generate Twitter thread
         const twitterCompletion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
