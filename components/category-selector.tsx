@@ -156,8 +156,8 @@ export function CategorySelector({ categories, subscribedCategories: initialSubs
                         <CardFooter className="pt-4 mt-auto border-t bg-muted/5">
                             {isSubscribed ? (
                                 <Button
-                                    variant="destructive"
-                                    className="w-full shadow-sm hover:bg-red-600"
+                                    variant="secondary"
+                                    className="w-full bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 dark:text-red-400 font-medium"
                                     onClick={(e) => handleUnsubscribe(category.id, e)}
                                     disabled={!!loading}
                                 >
