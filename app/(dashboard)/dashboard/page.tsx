@@ -1,125 +1,148 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Activity, Mail, TrendingUp, Users } from "lucide-react"
+import { Activity, CalendarDays, Clock, Linkedin, Sparkles, Twitter } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
 
 export default function DashboardPage() {
     return (
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between space-y-2">
-                <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-                <div className="flex items-center space-x-2">
-                    {/* Date Range Picker Placeholder */}
-                </div>
+                <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
+                {/* <div className="flex items-center space-x-2"> 
+                    Date Range Picker could go here
+                </div> */}
             </div>
             <Tabs defaultValue="overview" className="space-y-4">
                 <TabsList>
                     <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                    <TabsTrigger value="reports">Reports</TabsTrigger>
+                    {/* <TabsTrigger value="analytics">Analytics</TabsTrigger> */}
                 </TabsList>
                 <TabsContent value="overview" className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">
-                                    Articles Processed
+                                    Generated Posts
                                 </CardTitle>
-                                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                <Sparkles className="h-4 w-4 text-emerald-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">128</div>
+                                <div className="text-2xl font-bold">12</div>
                                 <p className="text-xs text-muted-foreground">
-                                    +20.1% from last month
+                                    +4 this week
                                 </p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">
-                                    Newsletters Sent
+                                    Scheduled
                                 </CardTitle>
-                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                <CalendarDays className="h-4 w-4 text-blue-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">+12</div>
+                                <div className="text-2xl font-bold">8</div>
                                 <p className="text-xs text-muted-foreground">
-                                    +180.1% from last month
+                                    Upcoming posts
                                 </p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Subscribers</CardTitle>
-                                <Users className="h-4 w-4 text-muted-foreground" />
+                                <CardTitle className="text-sm font-medium">Time Saved</CardTitle>
+                                <Clock className="h-4 w-4 text-orange-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">2,341</div>
+                                <div className="text-2xl font-bold">4.5h</div>
                                 <p className="text-xs text-muted-foreground">
-                                    +19% from last month
+                                    Estimated this month
                                 </p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">
-                                    Avg. Open Rate
+                                    Active Segments
                                 </CardTitle>
-                                <Activity className="h-4 w-4 text-muted-foreground" />
+                                <Activity className="h-4 w-4 text-purple-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">42.8%</div>
+                                <div className="text-2xl font-bold">3</div>
                                 <p className="text-xs text-muted-foreground">
-                                    +4% from last week
+                                    Feeds monitored
                                 </p>
                             </CardContent>
                         </Card>
                     </div>
+
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                         <Card className="col-span-4">
                             <CardHeader>
-                                <CardTitle>Engagement by Platform</CardTitle>
+                                <CardTitle>Getting Started</CardTitle>
+                                <CardDescription>
+                                    Your path to social media automation.
+                                </CardDescription>
                             </CardHeader>
-                            <CardContent className="pl-2">
-                                {/* Mock Chart representation */}
-                                <div className="h-[200px] w-full flex items-end justify-between px-4 space-x-2">
-                                    <div className="w-1/3 bg-blue-500 rounded-t-md h-[70%] relative group">
-                                        <span className="absolute bottom-full mb-1 w-full text-center text-xs">LinkedIn</span>
+                            <CardContent className="pl-6">
+                                <div className="relative border-l-2 border-muted space-y-8">
+                                    <div className="relative pl-6">
+                                        <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-slate-950" />
+                                        <h3 className="font-semibold text-sm">1. Select Segments</h3>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Choose topics like Tech, Business or Design in Discover tab.
+                                        </p>
                                     </div>
-                                    <div className="w-1/3 bg-slate-900 rounded-t-md h-[45%] relative group">
-                                        <span className="absolute bottom-full mb-1 w-full text-center text-xs">X / Twitter</span>
+                                    <div className="relative pl-6">
+                                        <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-muted border-2 border-muted-foreground ring-4 ring-white dark:ring-slate-950" />
+                                        <h3 className="font-semibold text-sm">2. Generate Content</h3>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Go to Articles, pick a story, and click "Generate Post".
+                                        </p>
                                     </div>
-                                    <div className="w-1/3 bg-pink-500 rounded-t-md h-[90%] relative group">
-                                        <span className="absolute bottom-full mb-1 w-full text-center text-xs">TikTok</span>
+                                    <div className="relative pl-6">
+                                        <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-muted border-2 border-muted-foreground ring-4 ring-white dark:ring-slate-950" />
+                                        <h3 className="font-semibold text-sm">3. Schedule</h3>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Review your generated posts and drag them to your Calendar.
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
                         </Card>
+
                         <Card className="col-span-3">
                             <CardHeader>
-                                <CardTitle>Viral Topics</CardTitle>
+                                <CardTitle>Next Scheduled</CardTitle>
                                 <CardDescription>
-                                    Trending keywords in your niche this week.
+                                    Coming up in your calendar
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-8">
-                                    <div className="flex items-center">
-                                        <span className="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-900">#AI</span>
-                                        <div className="ml-auto font-medium">+243%</div>
+                                <div className="space-y-4">
+                                    <div className="flex items-center border p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                                        <div className="h-8 w-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
+                                            <Linkedin className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">AI Trends in 2025</p>
+                                            <p className="text-xs text-muted-foreground">Tomorrow, 9:00 AM</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center">
-                                        <span className="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-green-200 dark:text-green-900">#SaaS</span>
-                                        <div className="ml-auto font-medium">+120%</div>
+                                    <div className="flex items-center border p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                                        <div className="h-8 w-8 rounded bg-black text-white flex items-center justify-center mr-3">
+                                            <Twitter className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">SaaS Growth Hacks</p>
+                                            <p className="text-xs text-muted-foreground">Wed, 2:00 PM</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center">
-                                        <span className="bg-purple-100 text-purple-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-purple-200 dark:text-purple-900">#NoCode</span>
-                                        <div className="ml-auto font-medium">+86%</div>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <span className="bg-orange-100 text-orange-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-orange-200 dark:text-orange-900">#Marketing</span>
-                                        <div className="ml-auto font-medium">+45%</div>
+                                    <div className="text-center pt-2">
+                                        <Link href="/dashboard/schedule" className="text-sm text-emerald-600 hover:underline">
+                                            View full planner →
+                                        </Link>
                                     </div>
                                 </div>
                             </CardContent>
