@@ -20,7 +20,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, Sparkles, Linkedin, Twitter, Calendar as CalendarIcon, Save } from "lucide-react"
+import {
+    Loader2, Sparkles, Linkedin, Twitter, Calendar as CalendarIcon, Save     Check
+} from "lucide-react"
 import { generateSocialPosts } from "@/lib/social-actions"
 import { savePost, updatePost } from "@/lib/post-actions"
 import { toast } from "sonner"
@@ -176,13 +178,17 @@ export function SocialPostGeneratorDialog({
                 <div className="flex-1 overflow-y-auto py-4">
                     {step === "config" ? (
                         <div className="space-y-6">
+                            {/* Platform Selection */}
                             <div className="space-y-3">
-                                <Label>Select Platforms</Label>
-                                <div className="flex gap-4">
+                                <Label className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">Destinations</Label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* LinkedIn Card */}
                                     <div
                                         className={cn(
-                                            "flex items-center gap-2 border rounded-lg p-3 cursor-pointer transition-all",
-                                            selectedPlatforms.includes("LINKEDIN") ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20" : "opacity-60"
+                                            "relative flex flex-col items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-blue-400/50",
+                                            selectedPlatforms.includes("LINKEDIN")
+                                                ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20"
+                                                : "border-muted/40 hover:bg-muted/50"
                                         )}
                                         onClick={() => {
                                             if (selectedPlatforms.includes("LINKEDIN")) {
@@ -192,17 +198,26 @@ export function SocialPostGeneratorDialog({
                                             }
                                         }}
                                     >
-                                        <div className={cn("w-4 h-4 rounded border flex items-center justify-center", selectedPlatforms.includes("LINKEDIN") ? "bg-blue-500 border-blue-500" : "border-muted-foreground")}>
-                                            {selectedPlatforms.includes("LINKEDIN") && <div className="w-2 h-2 bg-white rounded-sm" />}
+                                        <div className={cn(
+                                            "absolute top-3 right-3 h-5 w-5 rounded-md border flex items-center justify-center transition-colors",
+                                            selectedPlatforms.includes("LINKEDIN") ? "bg-blue-600 border-blue-600" : "border-muted-foreground/30"
+                                        )}>
+                                            {selectedPlatforms.includes("LINKEDIN") && <Check className="h-3.5 w-3.5 text-white" />}
                                         </div>
-                                        <Linkedin className="h-4 w-4 text-blue-600" />
-                                        <span className="text-sm font-medium">LinkedIn</span>
+
+                                        <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                            <Linkedin className="h-5 w-5 text-blue-600" />
+                                        </div>
+                                        <span className="font-semibold text-sm">LinkedIn Post</span>
                                     </div>
 
+                                    {/* Twitter Card */}
                                     <div
                                         className={cn(
-                                            "flex items-center gap-2 border rounded-lg p-3 cursor-pointer transition-all",
-                                            selectedPlatforms.includes("TWITTER") ? "border-black dark:border-white bg-neutral-50 dark:bg-neutral-900" : "opacity-60"
+                                            "relative flex flex-col items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-black/30 dark:hover:border-white/30",
+                                            selectedPlatforms.includes("TWITTER")
+                                                ? "border-black dark:border-white bg-neutral-100/50 dark:bg-neutral-900"
+                                                : "border-muted/40 hover:bg-muted/50"
                                         )}
                                         onClick={() => {
                                             if (selectedPlatforms.includes("TWITTER")) {
@@ -212,118 +227,125 @@ export function SocialPostGeneratorDialog({
                                             }
                                         }}
                                     >
-                                        <div className={cn("w-4 h-4 rounded border flex items-center justify-center", selectedPlatforms.includes("TWITTER") ? "bg-black dark:bg-white border-black dark:border-white" : "border-muted-foreground")}>
-                                            {selectedPlatforms.includes("TWITTER") && <div className="w-2 h-2 bg-white dark:bg-black rounded-sm" />}
+                                        <div className={cn(
+                                            "absolute top-3 right-3 h-5 w-5 rounded-md border flex items-center justify-center transition-colors",
+                                            selectedPlatforms.includes("TWITTER") ? "bg-black dark:bg-white border-black dark:border-white" : "border-muted-foreground/30"
+                                        )}>
+                                            {selectedPlatforms.includes("TWITTER") && <Check className="h-3.5 w-3.5 text-white dark:text-black" />}
                                         </div>
-                                        <Twitter className="h-4 w-4" />
-                                        <span className="text-sm font-medium">Twitter / X</span>
+
+                                        <div className="h-10 w-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                                            <Twitter className="h-5 w-5 text-black dark:text-white" />
+                                        </div>
+                                        <span className="font-semibold text-sm">Twitter Thread</span>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Configuration Tabs */}
                             <Tabs defaultValue={selectedPlatforms[0] || "linkedin"} className="w-full">
-                                <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="linkedin" disabled={!selectedPlatforms.includes("LINKEDIN")}>
-                                        <Linkedin className="mr-2 h-4 w-4" />
+                                <TabsList className="grid w-full grid-cols-2 h-10 bg-muted/50 p-1">
+                                    <TabsTrigger value="linkedin" disabled={!selectedPlatforms.includes("LINKEDIN")} className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
                                         LinkedIn Settings
                                     </TabsTrigger>
-                                    <TabsTrigger value="twitter" disabled={!selectedPlatforms.includes("TWITTER")}>
-                                        <Twitter className="mr-2 h-4 w-4" />
+                                    <TabsTrigger value="twitter" disabled={!selectedPlatforms.includes("TWITTER")} className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
                                         Twitter Settings
                                     </TabsTrigger>
                                 </TabsList>
 
-                                <TabsContent value="linkedin" className="space-y-4 pt-4">
-                                    <div className="space-y-2">
-                                        <Label>Tone of Voice</Label>
-                                        <Select value={linkedinTone} onValueChange={setLinkedinTone}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {TONE_OPTIONS.map(tone => (
-                                                    <SelectItem key={tone.value} value={tone.value}>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">{tone.label}</span>
-                                                            <span className="text-xs text-muted-foreground">{tone.description}</span>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                                {customToneName && (
-                                                    <SelectItem value="custom">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">✨ Custom: {customToneName}</span>
-                                                            <span className="text-xs text-muted-foreground">Your saved tone profile</span>
-                                                        </div>
-                                                    </SelectItem>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Style</Label>
-                                        <Select value={linkedinStyle} onValueChange={setLinkedinStyle}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {STYLE_OPTIONS.map(style => (
-                                                    <SelectItem key={style.value} value={style.value}>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">{style.label}</span>
-                                                            <span className="text-xs text-muted-foreground">{style.description}</span>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                <TabsContent value="linkedin" className="space-y-4 pt-4 animate-in fade-in-50 slide-in-from-top-1">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-medium text-muted-foreground">TONE OF VOICE</Label>
+                                            <Select value={linkedinTone} onValueChange={setLinkedinTone}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {TONE_OPTIONS.map(tone => (
+                                                        <SelectItem key={tone.value} value={tone.value}>
+                                                            <div className="flex flex-col py-1">
+                                                                <span className="font-medium text-sm">{tone.label}</span>
+                                                                <span className="text-[10px] text-muted-foreground">{tone.description}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                    {customToneName && (
+                                                        <SelectItem value="custom">
+                                                            <div className="flex flex-col py-1">
+                                                                <span className="font-medium text-sm">✨ Custom: {customToneName}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-medium text-muted-foreground">POST STYLE</Label>
+                                            <Select value={linkedinStyle} onValueChange={setLinkedinStyle}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {STYLE_OPTIONS.map(style => (
+                                                        <SelectItem key={style.value} value={style.value}>
+                                                            <div className="flex flex-col py-1">
+                                                                <span className="font-medium text-sm">{style.label}</span>
+                                                                <span className="text-[10px] text-muted-foreground">{style.description}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 </TabsContent>
 
-                                <TabsContent value="twitter" className="space-y-4 pt-4">
-                                    <div className="space-y-2">
-                                        <Label>Tone of Voice</Label>
-                                        <Select value={twitterTone} onValueChange={setTwitterTone}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {TONE_OPTIONS.map(tone => (
-                                                    <SelectItem key={tone.value} value={tone.value}>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">{tone.label}</span>
-                                                            <span className="text-xs text-muted-foreground">{tone.description}</span>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                                {customToneName && (
-                                                    <SelectItem value="custom">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">✨ Custom: {customToneName}</span>
-                                                            <span className="text-xs text-muted-foreground">Your saved tone profile</span>
-                                                        </div>
-                                                    </SelectItem>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Style</Label>
-                                        <Select value={twitterStyle} onValueChange={setTwitterStyle}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {STYLE_OPTIONS.filter(s => s.value !== 'professional').map(style => (
-                                                    <SelectItem key={style.value} value={style.value}>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">{style.label}</span>
-                                                            <span className="text-xs text-muted-foreground">{style.description}</span>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                <TabsContent value="twitter" className="space-y-4 pt-4 animate-in fade-in-50 slide-in-from-top-1">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-medium text-muted-foreground">TONE OF VOICE</Label>
+                                            <Select value={twitterTone} onValueChange={setTwitterTone}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {TONE_OPTIONS.map(tone => (
+                                                        <SelectItem key={tone.value} value={tone.value}>
+                                                            <div className="flex flex-col py-1">
+                                                                <span className="font-medium text-sm">{tone.label}</span>
+                                                                <span className="text-[10px] text-muted-foreground">{tone.description}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                    {customToneName && (
+                                                        <SelectItem value="custom">
+                                                            <div className="flex flex-col py-1">
+                                                                <span className="font-medium text-sm">✨ Custom: {customToneName}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-medium text-muted-foreground">THREAD STYLE</Label>
+                                            <Select value={twitterStyle} onValueChange={setTwitterStyle}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {STYLE_OPTIONS.filter(s => s.value !== 'professional').map(style => (
+                                                        <SelectItem key={style.value} value={style.value}>
+                                                            <div className="flex flex-col py-1">
+                                                                <span className="font-medium text-sm">{style.label}</span>
+                                                                <span className="text-[10px] text-muted-foreground">{style.description}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 </TabsContent>
                             </Tabs>
