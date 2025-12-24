@@ -51,7 +51,7 @@ export async function syncUser() {
         await prisma.user.upsert({
             where: { id: user.id },
             update: {
-                email: user.emailAddresses[0].emailAddress, // Keep email in sync
+                email: user.emailAddresses[0].emailAddress,
                 name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || "User"
             },
             create: {
@@ -62,10 +62,48 @@ export async function syncUser() {
         })
         return user.id
     } catch (error: any) {
-        // If race condition or unique constraint, we assume user likely exists or there's a deeper data issue.
-        // We return the ID anyway so downstream operations can attempt to proceed (and fail on FK if needed).
-        console.warn("syncUser warning:", error.code)
-        return user.id
+        console.warn("syncUser initial failed:", error.code)
+
+        // Handle Unique Constraint (P2002) on Email
+        // This means a user exists with this email but DIFFERENT ID.
+        if (error.code === 'P2002') {
+            const email = user.emailAddresses[0].emailAddress
+
+            // Find the conflicting user
+            const conflictUser = await prisma.user.findUnique({
+                where: { email }
+            })
+
+            if (conflictUser && conflictUser.id !== user.id) {
+                console.log(`Resolving user conflict. Renaming old user ${conflictUser.id} (${conflictUser.email})`)
+
+                // Rename the old user's email to free up the slot
+                await prisma.user.update({
+                    where: { id: conflictUser.id },
+                    data: {
+                        email: `${email}_migrated_${conflictUser.id}`
+                    }
+                })
+
+                // Now retry the original upsert for the correct user
+                await prisma.user.upsert({
+                    where: { id: user.id },
+                    update: {
+                        email: user.emailAddresses[0].emailAddress,
+                        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || "User"
+                    },
+                    create: {
+                        id: user.id,
+                        email: user.emailAddresses[0].emailAddress,
+                        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || "User"
+                    }
+                })
+                return user.id
+            }
+        }
+
+        // If other error, rethrow or return valid ID if possible (though unsafe)
+        throw error
     }
 }
 
