@@ -437,7 +437,7 @@ export function SocialPostGeneratorDialog({
                     )}
                 </div>
 
-                <div className="p-6 pt-2">
+                <div className="p-6 border-t bg-muted/5">
                     {step === "config" ? (
                         <div className="flex items-center justify-between">
                             <Button
@@ -466,7 +466,7 @@ export function SocialPostGeneratorDialog({
                             </Button>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4">
                             <Button
                                 variant="outline"
                                 onClick={() => setStep("config")}
@@ -474,33 +474,29 @@ export function SocialPostGeneratorDialog({
                                 Back
                             </Button>
                             <div className="flex items-center gap-3">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-xs text-muted-foreground mb-1">Schedule date</span>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className={cn(
-                                                    "w-[160px] justify-start text-left font-normal bg-white",
-                                                    !scheduledDate && "text-muted-foreground"
-                                                )}
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {scheduledDate ? format(scheduledDate, "PPP") : <span>Pick a date</span>}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="end">
-                                            <Calendar
-                                                mode="single"
-                                                selected={scheduledDate}
-                                                onSelect={setScheduledDate}
-                                                initialFocus
-                                                disabled={(date) => date < new Date()}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                "w-[200px] justify-start text-left font-normal bg-white",
+                                                !scheduledDate && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {scheduledDate ? format(scheduledDate, "PPP") : <span>Schedule for...</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="end">
+                                        <Calendar
+                                            mode="single"
+                                            selected={scheduledDate}
+                                            onSelect={setScheduledDate}
+                                            initialFocus
+                                            disabled={(date) => date < new Date()}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                                 <Button
                                     onClick={handleSave}
                                     disabled={isSaving}
