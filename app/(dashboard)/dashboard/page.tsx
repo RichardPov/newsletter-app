@@ -64,22 +64,25 @@ export default async function DashboardPage() {
                 <TabsContent value="overview" className="space-y-4">
                     {/* Getting Started - Interactive Widget */}
                     <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
-                        <Card className="col-span-full border-none shadow-none bg-transparent p-0">
-                            <div className="mb-4 flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-lg font-semibold tracking-tight">Getting Started</h3>
-                                    <p className="text-sm text-muted-foreground">Complete these steps to set up your automated workflow.</p>
+                        <Card className="col-span-full border-blue-100 bg-blue-50/30 dark:bg-blue-950/10 dark:border-blue-900/30">
+                            <CardHeader className="pb-4">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    <CardTitle className="text-xl text-blue-950 dark:text-blue-50">Getting Started</CardTitle>
                                 </div>
-                            </div>
+                                <CardDescription className="text-blue-800/70 dark:text-blue-300/70">
+                                    Complete these steps to set up your automated workflow.
+                                </CardDescription>
+                            </CardHeader>
 
-                            <CardContent className="p-0">
+                            <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {steps.map((step) => (
                                         <div key={step.id} className={cn(
-                                            "relative flex flex-col gap-4 p-5 rounded-xl border bg-card transition-all h-full",
+                                            "relative flex flex-col gap-4 p-5 rounded-xl border transition-all h-full",
                                             step.isCompleted
-                                                ? "border-emerald-100 bg-emerald-50/30 dark:bg-emerald-950/5 dark:border-emerald-900/30 opacity-80 hover:opacity-100"
-                                                : "border-blue-100 bg-white shadow-sm hover:shadow-md dark:bg-neutral-900 dark:border-neutral-800 ring-1 ring-blue-500/10"
+                                                ? "border-emerald-100 bg-emerald-50/50 dark:bg-emerald-950/20 dark:border-emerald-900/30 opacity-80"
+                                                : "border-blue-100/50 bg-white shadow-sm hover:shadow-md dark:bg-neutral-900 dark:border-neutral-800"
                                         )}>
                                             <div className="flex items-center justify-between">
                                                 <div className={cn(
@@ -91,7 +94,7 @@ export default async function DashboardPage() {
                                                     {step.isCompleted ? <CheckCircle2 className="h-5 w-5" /> : step.id}
                                                 </div>
                                                 {step.isCompleted && (
-                                                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100">
+                                                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100 border-none">
                                                         Done
                                                     </Badge>
                                                 )}
@@ -101,7 +104,7 @@ export default async function DashboardPage() {
                                                 <h4 className={cn("font-semibold", step.isCompleted ? "text-muted-foreground" : "text-foreground")}>
                                                     {step.title}
                                                 </h4>
-                                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                                                     {step.description}
                                                 </p>
                                             </div>
