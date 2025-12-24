@@ -12,7 +12,7 @@ export async function savePost(data: {
     scheduledFor?: Date
     status: "DRAFT" | "SCHEDULED" | "PUBLISHED"
 }) {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
         throw new Error("Unauthorized")
     }
@@ -53,7 +53,7 @@ export async function savePost(data: {
 }
 
 export async function deletePost(postId: string) {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
         throw new Error("Unauthorized")
     }
@@ -71,7 +71,7 @@ export async function deletePost(postId: string) {
 }
 
 export async function getScheduledPosts() {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
         return []
     }
@@ -100,7 +100,7 @@ export async function updatePost(postId: string, data: {
     scheduledFor?: Date
     status?: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED'
 }) {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) throw new Error("Unauthorized")
 
     await prisma.post.update({
