@@ -41,7 +41,7 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
         },
         {
             href: "/dashboard/social",
-            title: "Social Generator",
+            title: "Saved Drafts",
             icon: Share2,
         },
         {
