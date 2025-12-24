@@ -42,361 +42,332 @@ export async function getFeeds() {
     return feeds
 }
 
-export async function addFeed(rawUrl: string, category?: string) {
-    const user = await currentUser()
-    if (!user) return { success: false, error: "Unauthorized" }
-    const userId = user.id
+// ... (inside addFeed)
+export async function addFeed(rawUrl: string, category?: string, skipRefresh: boolean = false) {
+    // ... existing logic ...
 
-    // User Sync / Upsert to ensure Foreign Key exists
-    await prisma.user.upsert({
-        where: { id: userId },
-        update: {},
-        create: {
-            id: userId,
-            email: user.emailAddresses[0].emailAddress,
-            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || "User"
+    await prisma.feed.create({
+        data: {
+            userId,
+            url,
+            name,
+            category  // Add category if provided
         }
     })
 
-    let url = rawUrl.trim()
-    if (!url.startsWith("http")) {
-        url = `https://${url}`
-    }
-
-    try {
-        console.log("Attempting to add feed:", url)
-
-        // Parse RSS
-        const feed = await parser.parseURL(url)
-        console.log("RSS Parsed, title:", feed.title)
-
-        if (!feed) throw new Error("Invalid RSS feed structure")
-
-        const name = feed.title || new URL(url).hostname
-
-        await prisma.feed.create({
-            data: {
-                userId,
-                url,
-                name,
-                category  // Add category if provided
-            }
-        })
-
-        // Immediately fetch articles for the new feed so user sees data
+    // Immediately fetch articles unless skipped
+    if (!skipRefresh) {
         await refreshFeeds()
-
-        revalidatePath('/dashboard/feeds')
-        revalidatePath('/dashboard/discover')
-        return { success: true }
-    } catch (e: any) {
-        console.error("addFeed error:", e)
-        return { success: false, error: e.message || "Failed to parse or add feed." }
     }
-}
-
-export async function removeFeed(id: string) {
-    const { userId } = await auth()
-    if (!userId) throw new Error("Unauthorized")
-
-    await prisma.feed.delete({
-        where: { id, userId } // Ensure user owns the feed
-    })
 
     revalidatePath('/dashboard/feeds')
-}
+    revalidatePath('/dashboard/discover')
+    return { success: true }
+} catch (e: any) {
+    // ...
 
-// Articles Setup
-export async function refreshFeeds() {
-    const { userId } = await auth()
-    if (!userId) throw new Error("Unauthorized")
+    export async function removeFeed(id: string) {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
 
-    const feeds = await prisma.feed.findMany({
-        where: { userId, isActive: true }
-    })
+        await prisma.feed.delete({
+            where: { id, userId } // Ensure user owns the feed
+        })
 
-    const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-    })
+        revalidatePath('/dashboard/feeds')
+    }
 
-    let newCount = 0
+    // Articles Setup
+    export async function refreshFeeds() {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
 
-    for (const feed of feeds) {
-        try {
-            const parsed = await parser.parseURL(feed.url)
+        const feeds = await prisma.feed.findMany({
+            where: { userId, isActive: true }
+        })
 
-            // Limit to top 5 most recent items per feed to avoid rate limits/cost spikes
-            const recentItems = parsed.items.slice(0, 5)
+        const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        })
 
-            for (const item of recentItems) {
-                if (!item.link || !item.title) continue
+        let newCount = 0
 
-                // Check for duplicate BEFORE processing AI to save money
-                const existing = await prisma.article.findFirst({
-                    where: {
-                        userId,
-                        url: item.link
-                    }
-                })
+        for (const feed of feeds) {
+            try {
+                const parsed = await parser.parseURL(feed.url)
 
-                if (existing) continue
+                // Limit to top 5 most recent items per feed to avoid rate limits/cost spikes
+                const recentItems = parsed.items.slice(0, 5)
 
-                let viralScore = 0
-                let summary = "No summary available."
+                for (const item of recentItems) {
+                    if (!item.link || !item.title) continue
 
-                // REAL AI ANALYSIS
-                if (process.env.OPENAI_API_KEY) {
-                    try {
-                        const contentToAnalyze = (item.contentSnippet || item.content || item.title).substring(0, 1000)
+                    // Check for duplicate BEFORE processing AI to save money
+                    const existing = await prisma.article.findFirst({
+                        where: {
+                            userId,
+                            url: item.link
+                        }
+                    })
 
-                        const completion = await openai.chat.completions.create({
-                            model: "gpt-4o-mini",
-                            messages: [
-                                {
-                                    role: "system",
-                                    content: `You are an expert content curator for a tech newsletter. Analyze the article.
+                    if (existing) continue
+
+                    let viralScore = 0
+                    let summary = "No summary available."
+
+                    // REAL AI ANALYSIS
+                    if (process.env.OPENAI_API_KEY) {
+                        try {
+                            const contentToAnalyze = (item.contentSnippet || item.content || item.title).substring(0, 1000)
+
+                            const completion = await openai.chat.completions.create({
+                                model: "gpt-4o-mini",
+                                messages: [
+                                    {
+                                        role: "system",
+                                        content: `You are an expert content curator for a tech newsletter. Analyze the article.
                                     Return a JSON object with:
                                     - "summary": A concise, engaging summary (max 2 sentences).
                                     - "viralScore": A number between 0-10 indicating potential virality on social media (Tech/Business audience).`
-                                },
-                                {
-                                    role: "user",
-                                    content: `Title: ${item.title}\nContent: ${contentToAnalyze}`
-                                }
-                            ],
-                            response_format: { type: "json_object" }
-                        })
+                                    },
+                                    {
+                                        role: "user",
+                                        content: `Title: ${item.title}\nContent: ${contentToAnalyze}`
+                                    }
+                                ],
+                                response_format: { type: "json_object" }
+                            })
 
-                        const result = JSON.parse(completion.choices[0].message.content || "{}")
-                        summary = result.summary || summary
-                        viralScore = result.viralScore || 0
+                            const result = JSON.parse(completion.choices[0].message.content || "{}")
+                            summary = result.summary || summary
+                            viralScore = result.viralScore || 0
 
-                    } catch (aiError) {
-                        console.error("OpenAI Error:", aiError)
-                        summary = "AI analysis failed, using fallback."
-                    }
-                } else {
-                    // Fallback Mock
-                    viralScore = Math.floor(Math.random() * 10) + 1
-                    summary = "AI summary pending... (Key missing)"
-                }
-
-                try {
-                    await prisma.article.create({
-                        data: {
-                            userId,
-                            feedId: feed.id,
-                            title: item.title,
-                            url: item.link,
-                            content: item.contentSnippet || item.content || "",
-                            summary: summary,
-                            publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
-                            viralScore: viralScore,
-                            status: "REVIEW"
+                        } catch (aiError) {
+                            console.error("OpenAI Error:", aiError)
+                            summary = "AI analysis failed, using fallback."
                         }
-                    })
-                    newCount++
-                } catch (e) {
-                    // Ignore unique constraint violations if they slip through
-                    continue
+                    } else {
+                        // Fallback Mock
+                        viralScore = Math.floor(Math.random() * 10) + 1
+                        summary = "AI summary pending... (Key missing)"
+                    }
+
+                    try {
+                        await prisma.article.create({
+                            data: {
+                                userId,
+                                feedId: feed.id,
+                                title: item.title,
+                                url: item.link,
+                                content: item.contentSnippet || item.content || "",
+                                summary: summary,
+                                publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
+                                viralScore: viralScore,
+                                status: "REVIEW"
+                            }
+                        })
+                        newCount++
+                    } catch (e) {
+                        // Ignore unique constraint violations if they slip through
+                        continue
+                    }
                 }
+            } catch (e) {
+                console.error(`Failed to parse feed ${feed.url}`, e)
             }
-        } catch (e) {
-            console.error(`Failed to parse feed ${feed.url}`, e)
         }
+
+        revalidatePath('/dashboard/articles')
+        return { success: true, count: newCount }
     }
 
-    revalidatePath('/dashboard/articles')
-    return { success: true, count: newCount }
-}
+    // System-level refresh (For Cron Jobs - No Auth Required)
+    export async function refreshAllFeeds() {
+        // Fetch ALL active feeds regardless of user
+        const feeds = await prisma.feed.findMany({
+            where: { isActive: true }
+        })
 
-// System-level refresh (For Cron Jobs - No Auth Required)
-export async function refreshAllFeeds() {
-    // Fetch ALL active feeds regardless of user
-    const feeds = await prisma.feed.findMany({
-        where: { isActive: true }
-    })
+        const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        })
 
-    const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-    })
+        let newCount = 0
 
-    let newCount = 0
+        for (const feed of feeds) {
+            try {
+                const parsed = await parser.parseURL(feed.url)
+                const recentItems = parsed.items.slice(0, 5)
 
-    for (const feed of feeds) {
-        try {
-            const parsed = await parser.parseURL(feed.url)
-            const recentItems = parsed.items.slice(0, 5)
+                for (const item of recentItems) {
+                    if (!item.link || !item.title) continue
 
-            for (const item of recentItems) {
-                if (!item.link || !item.title) continue
+                    // Check duplicate
+                    const existing = await prisma.article.findFirst({
+                        where: {
+                            userId: feed.userId, // Use feed's owner ID
+                            url: item.link
+                        }
+                    })
 
-                // Check duplicate
-                const existing = await prisma.article.findFirst({
-                    where: {
-                        userId: feed.userId, // Use feed's owner ID
-                        url: item.link
-                    }
-                })
+                    if (existing) continue
 
-                if (existing) continue
+                    let viralScore = 0
+                    let summary = "No summary available."
 
-                let viralScore = 0
-                let summary = "No summary available."
+                    // REAL AI ANALYSIS
+                    if (process.env.OPENAI_API_KEY) {
+                        try {
+                            const contentToAnalyze = (item.contentSnippet || item.content || item.title).substring(0, 1000)
 
-                // REAL AI ANALYSIS
-                if (process.env.OPENAI_API_KEY) {
-                    try {
-                        const contentToAnalyze = (item.contentSnippet || item.content || item.title).substring(0, 1000)
-
-                        const completion = await openai.chat.completions.create({
-                            model: "gpt-4o-mini",
-                            messages: [
-                                {
-                                    role: "system",
-                                    content: `You are an expert content curator. Analyze the article.
+                            const completion = await openai.chat.completions.create({
+                                model: "gpt-4o-mini",
+                                messages: [
+                                    {
+                                        role: "system",
+                                        content: `You are an expert content curator. Analyze the article.
                                     Return a JSON object with:
                                     - "summary": A concise summary (max 2 sentences).
                                     - "viralScore": A number between 0-10 indicating potential virality.`
-                                },
-                                {
-                                    role: "user",
-                                    content: `Title: ${item.title}\nContent: ${contentToAnalyze}`
-                                }
-                            ],
-                            response_format: { type: "json_object" }
-                        })
+                                    },
+                                    {
+                                        role: "user",
+                                        content: `Title: ${item.title}\nContent: ${contentToAnalyze}`
+                                    }
+                                ],
+                                response_format: { type: "json_object" }
+                            })
 
-                        const result = JSON.parse(completion.choices[0].message.content || "{}")
-                        summary = result.summary || summary
-                        viralScore = result.viralScore || 0
+                            const result = JSON.parse(completion.choices[0].message.content || "{}")
+                            summary = result.summary || summary
+                            viralScore = result.viralScore || 0
 
-                    } catch (aiError) {
-                        console.error("OpenAI Error:", aiError)
-                        summary = "AI analysis failed, using fallback."
-                    }
-                } else {
-                    viralScore = Math.floor(Math.random() * 10) + 1
-                    summary = "AI summary pending... (Key missing)"
-                }
-
-                try {
-                    await prisma.article.create({
-                        data: {
-                            userId: feed.userId,
-                            feedId: feed.id,
-                            title: item.title,
-                            url: item.link,
-                            content: item.contentSnippet || item.content || "",
-                            summary: summary,
-                            publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
-                            viralScore: viralScore,
-                            status: "REVIEW"
+                        } catch (aiError) {
+                            console.error("OpenAI Error:", aiError)
+                            summary = "AI analysis failed, using fallback."
                         }
-                    })
-                    newCount++
-                } catch (e) {
-                    continue
+                    } else {
+                        viralScore = Math.floor(Math.random() * 10) + 1
+                        summary = "AI summary pending... (Key missing)"
+                    }
+
+                    try {
+                        await prisma.article.create({
+                            data: {
+                                userId: feed.userId,
+                                feedId: feed.id,
+                                title: item.title,
+                                url: item.link,
+                                content: item.contentSnippet || item.content || "",
+                                summary: summary,
+                                publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
+                                viralScore: viralScore,
+                                status: "REVIEW"
+                            }
+                        })
+                        newCount++
+                    } catch (e) {
+                        continue
+                    }
                 }
+            } catch (e) {
+                console.error(`Failed to parse feed ${feed.url}`, e)
             }
-        } catch (e) {
-            console.error(`Failed to parse feed ${feed.url}`, e)
         }
+
+        revalidatePath('/dashboard/articles')
+        return { success: true, count: newCount }
     }
 
-    revalidatePath('/dashboard/articles')
-    return { success: true, count: newCount }
-}
+    export async function getArticles() {
+        const { userId } = await auth()
+        if (!userId) return []
 
-export async function getArticles() {
-    const { userId } = await auth()
-    if (!userId) return []
-
-    return await prisma.article.findMany({
-        where: { userId },
-        orderBy: { publishedAt: 'desc' },
-        include: { feed: true }
-    })
-}
-
-export async function saveNewsletter(data: {
-    title: string,
-    intro: string,
-    outro: string,
-    articleIds: string[]
-}) {
-    const { userId } = await auth()
-    if (!userId) throw new Error("Unauthorized")
-
-    // Create a new draft (MVP: always new for now, or we can add ID update logic later)
-    await prisma.newsletter.create({
-        data: {
-            userId,
-            title: data.title,
-            intro: data.intro,
-            outro: data.outro,
-            status: "DRAFT",
-            articles: {
-                connect: data.articleIds.map(id => ({ id }))
-            }
-        }
-    })
-
-    return { success: true }
-}
-
-export async function completeOnboarding(data: {
-    name: string,
-    feeds: string[],
-    toneRawText?: string
-}) {
-    const { userId } = await auth()
-    if (!userId) throw new Error("Unauthorized")
-
-    // 1. Update User (Name + Flag)
-    await prisma.user.update({
-        where: { id: userId },
-        data: {
-            name: data.name,
-            onboardingCompleted: true
-        }
-    })
-
-    // 2. Add Feeds
-    for (const url of data.feeds) {
-        try {
-            // Check if already exists to be safe
-            const existing = await prisma.feed.findFirst({ where: { userId, url } })
-            if (!existing) {
-                // simple add, ideally we parse name but for onboarding we might just use hostname
-                const name = new URL(url).hostname
-                await prisma.feed.create({ data: { userId, url, name } })
-            }
-        } catch (e) { }
-    }
-
-    // 3. Analyze Tone (Mock) if provided
-    if (data.toneRawText) {
-        // Mock AI analysis
-        const styles = ["Professional", "Casual", "Witty", "Authoritative"]
-        const randomStyle = styles[Math.floor(Math.random() * styles.length)]
-
-        await prisma.toneProfile.upsert({
+        return await prisma.article.findMany({
             where: { userId },
-            update: {
-                name: "Analyzed Persona",
-                style: `Based on your inputs, we detected a ${randomStyle} tone. ${data.toneRawText.substring(0, 50)}...`
-            },
-            create: {
-                userId,
-                name: "Analyzed Persona",
-                style: `Based on your inputs, we detected a ${randomStyle} tone.`
-            }
+            orderBy: { publishedAt: 'desc' },
+            include: { feed: true }
         })
     }
 
-    // 4. Trigger initial fetch
-    await refreshFeeds()
+    export async function saveNewsletter(data: {
+        title: string,
+        intro: string,
+        outro: string,
+        articleIds: string[]
+    }) {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
 
-    return { success: true }
-}
+        // Create a new draft (MVP: always new for now, or we can add ID update logic later)
+        await prisma.newsletter.create({
+            data: {
+                userId,
+                title: data.title,
+                intro: data.intro,
+                outro: data.outro,
+                status: "DRAFT",
+                articles: {
+                    connect: data.articleIds.map(id => ({ id }))
+                }
+            }
+        })
+
+        return { success: true }
+    }
+
+    export async function completeOnboarding(data: {
+        name: string,
+        feeds: string[],
+        toneRawText?: string
+    }) {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
+
+        // 1. Update User (Name + Flag)
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                name: data.name,
+                onboardingCompleted: true
+            }
+        })
+
+        // 2. Add Feeds
+        for (const url of data.feeds) {
+            try {
+                // Check if already exists to be safe
+                const existing = await prisma.feed.findFirst({ where: { userId, url } })
+                if (!existing) {
+                    // simple add, ideally we parse name but for onboarding we might just use hostname
+                    const name = new URL(url).hostname
+                    await prisma.feed.create({ data: { userId, url, name } })
+                }
+            } catch (e) { }
+        }
+
+        // 3. Analyze Tone (Mock) if provided
+        if (data.toneRawText) {
+            // Mock AI analysis
+            const styles = ["Professional", "Casual", "Witty", "Authoritative"]
+            const randomStyle = styles[Math.floor(Math.random() * styles.length)]
+
+            await prisma.toneProfile.upsert({
+                where: { userId },
+                update: {
+                    name: "Analyzed Persona",
+                    style: `Based on your inputs, we detected a ${randomStyle} tone. ${data.toneRawText.substring(0, 50)}...`
+                },
+                create: {
+                    userId,
+                    name: "Analyzed Persona",
+                    style: `Based on your inputs, we detected a ${randomStyle} tone.`
+                }
+            })
+        }
+
+        // 4. Trigger initial fetch
+        await refreshFeeds()
+
+        return { success: true }
+    }

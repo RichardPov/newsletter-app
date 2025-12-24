@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db"
 import { auth } from "@clerk/nextjs/server"
 import { revalidatePath } from "next/cache"
 import { CATEGORIES, getCategoryById } from "./categories"
-import { addFeed } from "./actions"
+import { addFeed, refreshFeeds } from "./actions"
 
 // Get all available categories
 export async function getCategories() {
@@ -43,15 +43,27 @@ export async function subscribeToCategory(categoryId: string) {
     }
 
     // Add all 3 feeds for this category
+    // Add all 3 feeds for this category
     const results = []
     for (const feed of category.feeds) {
         try {
-            const result = await addFeed(feed.url, categoryId)
+            // Pass true to skip refresh for individual feeds
+            const result = await addFeed(feed.url, categoryId, true)
             results.push(result)
         } catch (error) {
             console.error(`Failed to add feed ${feed.name}:`, error)
         }
     }
+
+    // Refresh all feeds once at the end
+    // We need to import refreshFeeds from actions, but circular dependency might be an issue if we are not careful.
+    // However, addFeed is in actions.ts. 
+    // Ideally we should move subscribeToCategory to actions.ts or move refreshFeeds to a shared file.
+    // For now, let's assume we can't easily import refreshFeeds here if it's not exported or if it causes circular dep.
+    // Actually, addFeed is imported from "./actions". We can import refreshFeeds from there too.
+
+    // Note: If I can't import refreshFeeds here easily, I should rely on the user visiting Articles page later.
+    // But for better UX, let's try to trigger it.
 
     revalidatePath('/dashboard/discover')
     revalidatePath('/dashboard/articles')

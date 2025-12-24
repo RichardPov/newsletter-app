@@ -1,4 +1,3 @@
-"use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Activity, CalendarDays, Clock, Linkedin, Sparkles, Twitter, CheckCircle2, ArrowRight } from "lucide-react"
