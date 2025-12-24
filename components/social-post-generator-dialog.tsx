@@ -393,42 +393,138 @@ export function SocialPostGeneratorDialog({
 
                                 <div className="flex-1 min-h-[400px]">
                                     <TabsContent value="linkedin" className="h-full mt-0 border-none p-0 data-[state=inactive]:hidden group">
-                                        <div className="relative h-full flex flex-col rounded-xl border bg-muted/20 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
-                                            <div className="flex items-center justify-between p-3 border-b bg-white/50">
-                                                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Post Content</Label>
-                                                {generatedIds.linkedin && (
-                                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                                        <Check className="w-3 h-3 mr-1" />
-                                                        Saved
-                                                    </Badge>
-                                                )}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                                            {/* Editor Column */}
+                                            <div className="flex flex-col gap-2 h-full">
+                                                <div className="relative flex-1 flex flex-col rounded-xl border bg-muted/20 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                                                    <div className="flex items-center justify-between p-3 border-b bg-white/50">
+                                                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Editor</Label>
+                                                        {generatedIds.linkedin && (
+                                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                                                <Check className="w-3 h-3 mr-1" />
+                                                                Saved
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <Textarea
+                                                        value={generatedLinkedIn}
+                                                        onChange={(e) => setGeneratedLinkedIn(e.target.value)}
+                                                        className="flex-1 border-none focus-visible:ring-0 resize-none p-4 text-sm leading-relaxed bg-transparent"
+                                                        placeholder="Write your LinkedIn post here..."
+                                                    />
+                                                </div>
+                                                <div className="flex justify-end">
+                                                    <div className={cn(
+                                                        "text-xs font-medium flex items-center gap-1.5 transition-colors",
+                                                        generatedLinkedIn.length > 3000 ? "text-red-500" : generatedLinkedIn.length > 2700 ? "text-amber-500" : "text-muted-foreground"
+                                                    )}>
+                                                        {generatedLinkedIn.length > 3000 && <AlertCircle className="w-3 h-3" />}
+                                                        {generatedLinkedIn.length} / 3000
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <Textarea
-                                                value={generatedLinkedIn}
-                                                onChange={(e) => setGeneratedLinkedIn(e.target.value)}
-                                                className="flex-1 border-none focus-visible:ring-0 resize-none p-4 text-sm leading-relaxed bg-transparent"
-                                                placeholder="Write your LinkedIn post here..."
-                                            />
+
+                                            {/* Preview Column */}
+                                            <div className="hidden lg:flex flex-col h-full border rounded-xl bg-slate-50/50 dark:bg-slate-900/50 overflow-hidden">
+                                                <div className="p-3 border-b bg-white/50 dark:bg-black/20 backdrop-blur text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                                    <Linkedin className="w-3 h-3" /> Preview
+                                                </div>
+                                                <div className="flex-1 p-4 overflow-y-auto">
+                                                    <div className="bg-white dark:bg-slate-950 border rounded-lg shadow-sm p-4 space-y-3">
+                                                        {/* LI Header */}
+                                                        <div className="flex gap-3">
+                                                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                                                                <span className="text-xs font-bold text-slate-500">YOU</span>
+                                                            </div>
+                                                            <div className="text-xs">
+                                                                <div className="font-semibold text-slate-900 dark:text-slate-100">Your Name</div>
+                                                                <div className="text-slate-500">Content Creator</div>
+                                                                <div className="text-slate-400 flex items-center gap-1">Now • <span className="text-[10px]">🌐</span></div>
+                                                            </div>
+                                                        </div>
+                                                        {/* LI Body */}
+                                                        <div className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                                                            {generatedLinkedIn || <span className="text-slate-400 italic">Start writing to see preview...</span>}
+                                                        </div>
+                                                        {/* LI Footer Mock */}
+                                                        <div className="pt-2 border-t flex gap-4 text-slate-500">
+                                                            <div className="text-xs font-medium flex items-center gap-1"><span className="w-4 h-4 rounded bg-slate-200" /> Like</div>
+                                                            <div className="text-xs font-medium flex items-center gap-1"><span className="w-4 h-4 rounded bg-slate-200" /> Comment</div>
+                                                            <div className="text-xs font-medium flex items-center gap-1"><span className="w-4 h-4 rounded bg-slate-200" /> Repost</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </TabsContent>
 
                                     <TabsContent value="twitter" className="h-full mt-0 border-none p-0 data-[state=inactive]:hidden">
-                                        <div className="relative h-full flex flex-col rounded-xl border bg-muted/20 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
-                                            <div className="flex items-center justify-between p-3 border-b bg-white/50">
-                                                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Thread Content</Label>
-                                                {generatedIds.twitter && (
-                                                    <Badge variant="outline" className="bg-neutral-100 text-neutral-700 border-neutral-200">
-                                                        <Check className="w-3 h-3 mr-1" />
-                                                        Saved
-                                                    </Badge>
-                                                )}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                                            {/* Editor Column */}
+                                            <div className="flex flex-col gap-2 h-full">
+                                                <div className="relative flex-1 flex flex-col rounded-xl border bg-muted/20 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                                                    <div className="flex items-center justify-between p-3 border-b bg-white/50">
+                                                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Editor</Label>
+                                                        {generatedIds.twitter && (
+                                                            <Badge variant="outline" className="bg-neutral-100 text-neutral-700 border-neutral-200">
+                                                                <Check className="w-3 h-3 mr-1" />
+                                                                Saved
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <Textarea
+                                                        value={generatedTwitter}
+                                                        onChange={(e) => setGeneratedTwitter(e.target.value)}
+                                                        className="flex-1 border-none focus-visible:ring-0 resize-none p-4 font-mono text-sm bg-transparent"
+                                                        placeholder="Write your Twitter thread here..."
+                                                    />
+                                                </div>
+                                                <div className="flex justify-end">
+                                                    <div className={cn(
+                                                        "text-xs font-medium flex items-center gap-1.5 transition-colors",
+                                                        generatedTwitter.length > 280 ? "text-red-500" : generatedTwitter.length > 260 ? "text-amber-500" : "text-muted-foreground"
+                                                    )}>
+                                                        {generatedTwitter.length > 280 && <AlertCircle className="w-3 h-3" />}
+                                                        {generatedTwitter.length} / 280
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <Textarea
-                                                value={generatedTwitter}
-                                                onChange={(e) => setGeneratedTwitter(e.target.value)}
-                                                className="flex-1 border-none focus-visible:ring-0 resize-none p-4 font-mono text-sm bg-transparent"
-                                                placeholder="Write your Twitter thread here..."
-                                            />
+
+                                            {/* Preview Column */}
+                                            <div className="hidden lg:flex flex-col h-full border rounded-xl bg-slate-50/50 dark:bg-slate-900/50 overflow-hidden">
+                                                <div className="p-3 border-b bg-white/50 dark:bg-black/20 backdrop-blur text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                                    <Twitter className="w-3 h-3" /> Preview
+                                                </div>
+                                                <div className="flex-1 p-4 overflow-y-auto">
+                                                    <div className="bg-white dark:bg-black border rounded-lg shadow-sm p-4 space-y-3">
+                                                        {/* X Header */}
+                                                        <div className="flex gap-3">
+                                                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                                                                <span className="text-xs font-bold text-slate-500">YOU</span>
+                                                            </div>
+                                                            <div className="">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100">Your Name</span>
+                                                                    <span className="text-slate-500 text-sm">@handle</span>
+                                                                    <span className="text-slate-500 text-sm">·</span>
+                                                                    <span className="text-slate-500 text-sm">Now</span>
+                                                                </div>
+                                                                {/* X Body */}
+                                                                <div className="text-[15px] text-slate-900 dark:text-slate-100 whitespace-pre-wrap leading-normal mt-1">
+                                                                    {generatedTwitter || <span className="text-slate-400 italic">Start writing to see preview...</span>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        {/* X Footer Mock */}
+                                                        <div className="flex justify-between max-w-[80%] ml-12 pt-2 text-slate-500">
+                                                            <div className="flex items-center gap-1"><span className="w-4 h-4 rounded-full bg-slate-100" /></div>
+                                                            <div className="flex items-center gap-1"><span className="w-4 h-4 rounded-full bg-slate-100" /></div>
+                                                            <div className="flex items-center gap-1"><span className="w-4 h-4 rounded-full bg-slate-100" /></div>
+                                                            <div className="flex items-center gap-1"><span className="w-4 h-4 rounded-full bg-slate-100" /></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </TabsContent>
                                 </div>
