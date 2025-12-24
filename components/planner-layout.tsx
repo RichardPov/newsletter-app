@@ -19,6 +19,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/dialog"
+import {
     ChevronLeft,
     ChevronRight,
     Calendar as CalendarIcon,
@@ -43,11 +50,12 @@ export function PlannerLayout({ posts }: PlannerLayoutProps) {
     const [currentDate, setCurrentDate] = useState(new Date())
     const [view, setView] = useState<"calendar" | "list">("calendar")
     const [editingPost, setEditingPost] = useState<any | null>(null)
+    const [selectedDay, setSelectedDay] = useState<Date | null>(null)
 
     // Calendar Calculations
     const monthStart = startOfMonth(currentDate)
     const monthEnd = endOfMonth(currentDate)
-    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 }) // Monday start
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 })
     const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
 
     const calendarDays = eachDayOfInterval({
@@ -62,31 +70,14 @@ export function PlannerLayout({ posts }: PlannerLayoutProps) {
     const prevMonth = () => setCurrentDate(subMonths(currentDate, 1))
     const jumpToToday = () => setCurrentDate(new Date())
 
-    const handlePostUpdate = async (id: string, data: any) => {
-        try {
-            await updatePost(id, data)
-            toast.success("Post updated")
-            setEditingPost(null)
-            // Ideally force refresh or update local state (if passed down)
-            // Since this is a server component parent, we rely on router.refresh() usually, 
-            // but for instant feedback we might need local state update if 'posts' prop doesn't update auto.
-            // For now assume standard flow (EditDialog calls router.refresh usually?)
-            // Actually EditDialog calls onSave which calls updatePost.
-            // We need to re-fetch or rely on Next.js cache revalidation.
-            window.location.reload() // Brute force refresh for now to ensure sync
-        } catch (error) {
-            toast.error("Update failed")
-        }
+    const handlePostUpdate = (updatedPost: any) => {
+        window.location.reload()
     }
 
-    const handlePostDelete = async (id: string) => {
-        if (!confirm("Delete this scheduled post?")) return
-        try {
-            await deletePost(id)
-            toast.success("Post deleted")
-            window.location.reload()
-        } catch (e) { toast.error("Delete failed") }
-    }
+    // Get posts for the selected day dialog
+    const selectedDayPosts = selectedDay
+        ? posts.filter(p => p.scheduledFor && isSameDay(new Date(p.scheduledFor), selectedDay))
+        : []
 
     return (
         <div className="flex flex-col h-[calc(100vh-100px)] gap-6">
@@ -154,45 +145,34 @@ export function PlannerLayout({ posts }: PlannerLayoutProps) {
                                 return (
                                     <div
                                         key={date.toString()}
+                                        onClick={() => setSelectedDay(date)}
                                         className={cn(
-                                            "min-h-[100px] border-b border-r p-2 transition-colors hover:bg-muted/5 flex flex-col gap-1",
+                                            "min-h-[100px] border-b border-r p-2 transition-all cursor-pointer hover:bg-muted/5 flex flex-col gap-1 relative group",
                                             !isCurrentMonth && "bg-muted/10 text-muted-foreground",
                                             isCurrentDay && "bg-blue-50/30 dark:bg-blue-900/10"
                                         )}
                                     >
-                                        <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center justify-between mb-2">
                                             <span className={cn(
-                                                "text-sm font-medium h-7 w-7 flex items-center justify-center rounded-full",
-                                                isCurrentDay && "bg-blue-600 text-white shadow-sm"
+                                                "text-sm font-medium h-7 w-7 flex items-center justify-center rounded-full transition-colors",
+                                                isCurrentDay && "bg-blue-600 text-white shadow-sm",
+                                                !isCurrentDay && "group-hover:bg-muted/20"
                                             )}>
                                                 {format(date, "d")}
                                             </span>
-                                            {dayPosts.length > 0 && <span className="text-[10px] text-muted-foreground font-medium">{dayPosts.length} posts</span>}
                                         </div>
 
-                                        <div className="flex-1 flex flex-col gap-1 overflow-visible">
+                                        <div className="flex-1 flex flex-wrap content-start gap-1.5 p-1">
                                             {dayPosts.map(post => (
                                                 <div
                                                     key={post.id}
-                                                    onClick={() => setEditingPost(post)}
                                                     className={cn(
-                                                        "group text-[10px] sm:text-xs p-1.5 rounded border shadow-sm cursor-pointer hover:shadow-md transition-all truncate flex items-center gap-1.5",
-                                                        post.platform === "LINKEDIN"
-                                                            ? "bg-blue-50 border-blue-100 text-blue-700 hover:border-blue-300 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-100"
-                                                            : "bg-neutral-50 border-neutral-100 text-neutral-700 hover:border-neutral-300 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200"
+                                                        "h-2.5 w-2.5 rounded-full shadow-sm ring-1 ring-white dark:ring-neutral-900",
+                                                        post.platform === "LINKEDIN" ? "bg-blue-600" : "bg-black dark:bg-neutral-400"
                                                     )}
-                                                >
-                                                    {post.platform === "LINKEDIN" ? (
-                                                        <Linkedin className="h-3 w-3 flex-shrink-0" />
-                                                    ) : (
-                                                        <Twitter className="h-3 w-3 flex-shrink-0" />
-                                                    )}
-                                                    <span className="truncate font-medium">
-                                                        {post.article?.title || post.content}
-                                                    </span>
-                                                </div>
+                                                    title={post.platform}
+                                                />
                                             ))}
-                                            {/* Add Button for empty slots or on hover? Maybe later */}
                                         </div>
                                     </div>
                                 )
@@ -209,13 +189,78 @@ export function PlannerLayout({ posts }: PlannerLayoutProps) {
                 )}
             </div>
 
+            {/* Day Details Modal */}
+            <Dialog open={!!selectedDay} onOpenChange={(open) => !open && setSelectedDay(null)}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+                            {selectedDay && format(selectedDay, "EEEE, MMMM d")}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {selectedDayPosts.length} posts scheduled for this day
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3 py-4">
+                        {selectedDayPosts.length > 0 ? (
+                            selectedDayPosts.map(post => (
+                                <div
+                                    key={post.id}
+                                    onClick={() => {
+                                        setEditingPost(post)
+                                        // setSelectedDay(null) // Keep open or close? User might want to edit multiple. Let's keep simpler: edit opens on top or swap.
+                                        // Dialog stacking works in shadcn but can be messy. 
+                                        // Better UX: Close this, open edit.
+                                        setSelectedDay(null)
+                                    }}
+                                    className={cn(
+                                        "group flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md hover:border-blue-300/50",
+                                        post.platform === "LINKEDIN"
+                                            ? "bg-blue-50/50 dark:bg-blue-900/10"
+                                            : "bg-neutral-50/50 dark:bg-neutral-900/10"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border shadow-sm",
+                                        post.platform === "LINKEDIN"
+                                            ? "bg-blue-100 border-blue-200 text-blue-700"
+                                            : "bg-white border-neutral-200 text-neutral-900 dark:bg-neutral-800"
+                                    )}>
+                                        {post.platform === "LINKEDIN" ? <Linkedin className="h-4 w-4" /> : <Twitter className="h-4 w-4" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-xs font-semibold text-muted-foreground uppercase">{post.platform}</span>
+                                            <Badge variant="outline" className="h-5 text-[10px] px-1.5 bg-white">
+                                                {format(new Date(post.scheduledFor), "h:mm a")}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-sm line-clamp-2 font-medium text-foreground/90">
+                                            {post.content}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-xl">
+                                <p>No posts scheduled for this day.</p>
+                                <Button variant="link" className="text-blue-600" onClick={() => setSelectedDay(null)}>
+                                    Close
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {/* Edit Dialog Integration */}
             {editingPost && (
                 <EditPostDialog
                     post={editingPost}
                     open={!!editingPost}
                     onOpenChange={(open) => !open && setEditingPost(null)}
-                    onSave={() => window.location.reload()}
+                    onPostUpdated={handlePostUpdate}
                 />
             )}
         </div>
