@@ -45,7 +45,7 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
             icon: Share2,
         },
         {
-            href: "/dashboard/scheduler",
+            href: "/dashboard/schedule",
             title: "Planner",
             icon: Calendar,
         },
