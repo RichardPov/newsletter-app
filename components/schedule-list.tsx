@@ -41,10 +41,20 @@ export function ScheduleList({ initialPosts }: ScheduleListProps) {
     const [editDate, setEditDate] = useState<Date | undefined>(undefined)
 
     // Sort: Scheduled first (asc), then drafts (desc by creation)
+    // Sort: Scheduled first (asc), then drafts (desc by creation)
     const sortedPosts = [...posts].sort((a, b) => {
-        if (a.scheduledFor && b.scheduledFor) return new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime()
-        if (a.scheduledFor) return -1
-        if (b.scheduledFor) return 1
+        // Both are scheduled
+        if (a.status === "SCHEDULED" && b.status === "SCHEDULED") {
+            if (!a.scheduledFor) return 1
+            if (!b.scheduledFor) return -1
+            return new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime()
+        }
+
+        // One is scheduled, one is draft
+        if (a.status === "SCHEDULED") return -1
+        if (b.status === "SCHEDULED") return 1
+
+        // Both are drafts (or other), sort by created desc
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
 
