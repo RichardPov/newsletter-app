@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Sparkles, Linkedin, Twitter, Calendar as CalendarIcon, Save } from "lucide-react"
 import { generateSocialPosts } from "@/lib/social-actions"
-import { savePost } from "@/lib/post-actions"
+import { savePost, updatePost } from "@/lib/post-actions"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -77,6 +77,8 @@ export function SocialPostGeneratorDialog({
     const [isSaving, setIsSaving] = useState(false)
     const [activeTab, setActiveTab] = useState("linkedin")
 
+    const [generatedIds, setGeneratedIds] = useState<{ linkedin?: string, twitter?: string }>({})
+
     const router = useRouter()
 
     const handleGenerate = async () => {
@@ -90,9 +92,14 @@ export function SocialPostGeneratorDialog({
             })
 
             if (result.success && result.posts) {
-                // FIXED: result.posts is an object { linkedin: Post, twitter: Post }, not an array
                 const li = result.posts.linkedin?.content || ""
                 const tw = result.posts.twitter?.content || ""
+
+                // Store IDs so we can update them later instead of creating duplicates
+                setGeneratedIds({
+                    linkedin: result.posts.linkedin?.id,
+                    twitter: result.posts.twitter?.id
+                })
 
                 setGeneratedLinkedIn(li)
                 setGeneratedTwitter(tw)
@@ -113,30 +120,35 @@ export function SocialPostGeneratorDialog({
             // Save currently active tab content
             const platform = activeTab === "linkedin" ? "LINKEDIN" : "TWITTER"
             const content = activeTab === "linkedin" ? generatedLinkedIn : generatedTwitter
+            const existingId = activeTab === "linkedin" ? generatedIds.linkedin : generatedIds.twitter
 
             if (!content) {
                 toast.error("No content to save")
                 return
             }
 
-            // We create a new post entry specifically for this confirmed version
-            // Note: The generateSocialPosts already created "DRAFT" posts in DB, 
-            // but here we are basically creating a "finalized" version or we could have updated those IDs if we tracked them.
-            // For simplicity in this flow, we'll creating a new entry or we'd need to track the IDs returned by generateSocialPosts.
-            // Let's just create a new one for now as "Scheduled" or "Draft" and ignore the previous auto-generated drafts.
-            // Improvement: In a real app we might want to update the draft created by generateSocialPosts.
-
-            await savePost({
-                articleId,
-                platform,
-                content,
-                scheduledFor: scheduledDate,
-                status: scheduledDate ? "SCHEDULED" : "DRAFT"
-            })
+            if (existingId) {
+                // Update existing draft
+                await updatePost(existingId, {
+                    content,
+                    scheduledFor: scheduledDate,
+                    status: scheduledDate ? "SCHEDULED" : "DRAFT"
+                })
+            } else {
+                // Fallback: Create new if for some reason ID is missing
+                await savePost({
+                    articleId,
+                    platform,
+                    content,
+                    scheduledFor: scheduledDate,
+                    status: scheduledDate ? "SCHEDULED" : "DRAFT"
+                })
+            }
 
             toast.success(scheduledDate ? "Post scheduled!" : "Draft saved!")
             onOpenChange(false)
-            setStep("config") // Reset for next time
+            setStep("config") // Reset
+            setGeneratedIds({}) // Reset IDs
             setScheduledDate(undefined)
             router.refresh()
         } catch (error) {
