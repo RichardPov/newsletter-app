@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
     Dialog,
     DialogContent,
@@ -181,11 +180,11 @@ export function PlannerLayout({ posts }: PlannerLayoutProps) {
                     </div>
                 ) : (
                     // Refined List View
-                    <ScrollArea className="flex-1">
+                    <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-black/20">
                         <div className="p-6">
                             <ScheduleList initialPosts={posts} />
                         </div>
-                    </ScrollArea>
+                    </div>
                 )}
             </div>
 
