@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Activity, CalendarDays, Clock, Linkedin, Sparkles, Twitter } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
+import { CheckCircle2, ArrowRight } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export default function DashboardPage() {
     return (
