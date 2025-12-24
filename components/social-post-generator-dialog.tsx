@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
-    Loader2, Sparkles, Linkedin, Twitter, Calendar as CalendarIcon, Save, Check, Mic, PenTool, MessageSquare
+    Loader2, Sparkles, Linkedin, Twitter, Calendar as CalendarIcon, Save, Check, Mic, PenTool, MessageSquare, AlertCircle
 } from "lucide-react"
 import { generateSocialPosts } from "@/lib/social-actions"
 import { savePost, updatePost } from "@/lib/post-actions"
