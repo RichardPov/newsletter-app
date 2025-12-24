@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon, Clock, Linkedin, Twitter, AlertCircle } from "lucide-react"
+import { Calendar as CalendarIcon, Clock, Linkedin, Twitter, AlertCircle, Loader2, Save } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -154,9 +154,24 @@ export function EditPostDialog({ open, onOpenChange, post, onPostUpdated }: Edit
                     <Button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="bg-emerald-600 hover:bg-emerald-700 min-w-[100px]"
+                        className={cn(
+                            "min-w-[130px] gap-2 text-white",
+                            date
+                                ? "bg-emerald-600 hover:bg-emerald-700"
+                                : "bg-blue-600 hover:bg-blue-700"
+                        )}
                     >
-                        {isSaving ? "Saving..." : "Save Changes"}
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                {date ? <CalendarIcon className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                                {date ? "Schedule Post" : "Save Changes"}
+                            </>
+                        )}
                     </Button>
                 </div>
             </DialogContent>

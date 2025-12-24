@@ -74,6 +74,13 @@ export function SocialPostGeneratorDialog({
     const [twitterStyle, setTwitterStyle] = useState("hooky")
 
     // ... rest of state
+    const [scheduledDate, setScheduledDate] = useState<Date | undefined>()
+    const [generatedIds, setGeneratedIds] = useState<{ linkedin?: string, twitter?: string }>({})
+    const [generatedLinkedIn, setGeneratedLinkedIn] = useState("")
+    const [generatedTwitter, setGeneratedTwitter] = useState("")
+    const [activeTab, setActiveTab] = useState("linkedin")
+    const [isSaving, setIsSaving] = useState(false)
+
     const [isGenerating, setIsGenerating] = useState(false)
 
     const handleGenerate = async () => {
@@ -468,22 +475,48 @@ export function SocialPostGeneratorDialog({
                             </Button>
                             <div className="flex items-center gap-3">
                                 <div className="flex flex-col items-end">
-                                    <span className="text-xs text-muted-foreground">Status</span>
-                                    <span className="text-sm font-medium">
-                                        {scheduledDate ? format(scheduledDate, "MMM d, yyyy") : "Draft Mode"}
-                                    </span>
+                                    <span className="text-xs text-muted-foreground mb-1">Schedule date</span>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className={cn(
+                                                    "w-[160px] justify-start text-left font-normal bg-white",
+                                                    !scheduledDate && "text-muted-foreground"
+                                                )}
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {scheduledDate ? format(scheduledDate, "PPP") : <span>Pick a date</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="end">
+                                            <Calendar
+                                                mode="single"
+                                                selected={scheduledDate}
+                                                onSelect={setScheduledDate}
+                                                initialFocus
+                                                disabled={(date) => date < new Date()}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                                 <Button
                                     onClick={handleSave}
                                     disabled={isSaving}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm"
+                                    className={cn(
+                                        "gap-2 shadow-sm min-w-[140px]",
+                                        scheduledDate
+                                            ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                                    )}
                                 >
                                     {isSaving ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
-                                        <Save className="h-4 w-4" />
+                                        scheduledDate ? <CalendarIcon className="h-4 w-4" /> : <Save className="h-4 w-4" />
                                     )}
-                                    {scheduledDate ? "Schedule All" : "Save All"}
+                                    {scheduledDate ? "Schedule Post" : "Save as Draft"}
                                 </Button>
                             </div>
                         </div>
