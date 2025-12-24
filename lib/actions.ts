@@ -43,21 +43,35 @@ export async function getFeeds() {
 }
 
 // ... (inside addFeed)
-export async function addFeed(rawUrl: string, category?: string, skipRefresh: boolean = false) {
+export async function syncUser() {
     const user = await currentUser()
-    if (!user) return { success: false, error: "Unauthorized" }
-    const userId = user.id
+    if (!user) return null
 
-    // User Sync / Upsert to ensure Foreign Key exists
-    await prisma.user.upsert({
-        where: { id: userId },
-        update: {},
-        create: {
-            id: userId,
-            email: user.emailAddresses[0].emailAddress,
-            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || "User"
-        }
-    })
+    try {
+        await prisma.user.upsert({
+            where: { id: user.id },
+            update: {
+                email: user.emailAddresses[0].emailAddress, // Keep email in sync
+                name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || "User"
+            },
+            create: {
+                id: user.id,
+                email: user.emailAddresses[0].emailAddress,
+                name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || "User"
+            }
+        })
+        return user.id
+    } catch (error: any) {
+        // If race condition or unique constraint, we assume user likely exists or there's a deeper data issue.
+        // We return the ID anyway so downstream operations can attempt to proceed (and fail on FK if needed).
+        console.warn("syncUser warning:", error.code)
+        return user.id
+    }
+}
+
+export async function addFeed(rawUrl: string, category?: string, skipRefresh: boolean = false) {
+    const userId = await syncUser()
+    if (!userId) return { success: false, error: "Unauthorized" }
 
     let url = rawUrl.trim()
     if (!url.startsWith("http")) {
