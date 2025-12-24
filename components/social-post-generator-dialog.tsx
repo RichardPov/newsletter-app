@@ -546,7 +546,7 @@ export function SocialPostGeneratorDialog({
                             <Button
                                 onClick={handleGenerate}
                                 disabled={isGenerating || selectedPlatforms.length === 0}
-                                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 gap-2 shadow-sm"
+                                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm"
                             >
                                 {isGenerating ? (
                                     <>

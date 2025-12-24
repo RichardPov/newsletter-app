@@ -225,7 +225,7 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        className="h-9 border-dashed text-muted-foreground hover:text-blue-600 hover:border-blue-600"
+                                                        className="h-9 border-dashed text-muted-foreground hover:text-blue-600 hover:border-blue-600 bg-background"
                                                         onClick={() => handleGenerateMissing(group.articleId!, 'LINKEDIN')}
                                                         disabled={generatingId === group.articleId}
                                                     >
@@ -237,7 +237,7 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        className="h-9 border-dashed text-muted-foreground hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white"
+                                                        className="h-9 border-dashed text-muted-foreground hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white bg-background"
                                                         onClick={() => handleGenerateMissing(group.articleId!, 'TWITTER')}
                                                         disabled={generatingId === group.articleId}
                                                     >
