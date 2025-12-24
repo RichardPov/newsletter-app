@@ -1,13 +1,56 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Activity, CalendarDays, Clock, Linkedin, Sparkles, Twitter } from "lucide-react"
+import { Activity, CalendarDays, Clock, Linkedin, Sparkles, Twitter, CheckCircle2, ArrowRight } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
-import { CheckCircle2, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { auth } from "@clerk/nextjs/server"
+import { prisma } from "@/lib/db"
+import { Button } from "@/components/ui/button"
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+    const { userId } = await auth()
+    if (!userId) return null
+
+    // Fetch data for Getting Started logic
+    const activeFeedsCount = await prisma.feed.count({
+        where: { userId, isActive: true }
+    })
+    const generatedPostsCount = await prisma.post.count({
+        where: { userId }
+    })
+    const scheduledPostsCount = await prisma.post.count({
+        where: { userId, status: "SCHEDULED" }
+    })
+
+    const steps = [
+        {
+            id: 1,
+            title: "Select Segments",
+            description: "Choose content sources",
+            href: "/dashboard/discover",
+            isCompleted: activeFeedsCount > 0,
+            cta: "Select Segments"
+        },
+        {
+            id: 2,
+            title: "Generate Content",
+            description: "Create AI posts",
+            href: "/dashboard/articles",
+            isCompleted: generatedPostsCount > 0,
+            cta: "Generate Now"
+        },
+        {
+            id: 3,
+            title: "Schedule",
+            description: "Plan your calendar",
+            href: "/dashboard/schedule",
+            isCompleted: scheduledPostsCount > 0,
+            cta: "Go to Planner"
+        }
+    ]
+
     return (
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between space-y-2">
@@ -19,7 +62,7 @@ export default function DashboardPage() {
                     {/* <TabsTrigger value="analytics">Analytics</TabsTrigger> */}
                 </TabsList>
                 <TabsContent value="overview" className="space-y-4">
-                    {/* Getting Started - Onboarding Highlight */}
+                    {/* Getting Started - Interactive Widget */}
                     <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
                         <Card className="col-span-full border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/10 dark:border-emerald-500/30">
                             <CardHeader>
@@ -32,28 +75,48 @@ export default function DashboardPage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid gap-6 md:grid-cols-3 pt-2">
-                                    <div className="relative pl-6 border-l-2 border-emerald-200 dark:border-emerald-800">
-                                        <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-slate-950" />
-                                        <h3 className="font-semibold text-sm">1. Select Segments</h3>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Choose topics like Tech, Business or Design in <Link href="/dashboard/discover" className="underline decoration-emerald-500/30 hover:decoration-emerald-500">Discover tab</Link>.
-                                        </p>
-                                    </div>
-                                    <div className="relative pl-6 border-l-2 border-slate-200 dark:border-slate-800">
-                                        <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-white dark:border-slate-950" />
-                                        <h3 className="font-semibold text-sm">2. Generate Content</h3>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Go to Articles, pick a story, and click "Generate Post".
-                                        </p>
-                                    </div>
-                                    <div className="relative pl-6 border-l-2 border-slate-200 dark:border-slate-800">
-                                        <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-white dark:border-slate-950" />
-                                        <h3 className="font-semibold text-sm">3. Schedule</h3>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Review your generated posts and drag them to your Calendar.
-                                        </p>
-                                    </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {steps.map((step) => (
+                                        <div key={step.id} className={cn(
+                                            "flex flex-col gap-3 p-4 rounded-lg border transition-all h-full",
+                                            step.isCompleted
+                                                ? "bg-emerald-100/50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800"
+                                                : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm"
+                                        )}>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={cn(
+                                                        "h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold",
+                                                        step.isCompleted
+                                                            ? "bg-emerald-500 text-white"
+                                                            : "bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                                                    )}>
+                                                        {step.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : step.id}
+                                                    </div>
+                                                    <span className={cn(
+                                                        "font-medium",
+                                                        step.isCompleted ? "text-emerald-800 dark:text-emerald-400" : "text-neutral-900 dark:text-neutral-100"
+                                                    )}>{step.title}</span>
+                                                </div>
+                                            </div>
+
+                                            <p className="text-xs text-muted-foreground">{step.description}</p>
+
+                                            {!step.isCompleted ? (
+                                                <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-none mt-auto" asChild>
+                                                    <Link href={step.href}>
+                                                        {step.cta}
+                                                        <ArrowRight className="ml-2 h-3 w-3" />
+                                                    </Link>
+                                                </Button>
+                                            ) : (
+                                                <div className="mt-auto flex items-center text-xs text-emerald-600 font-medium pt-2">
+                                                    <CheckCircle2 className="mr-1 h-3 w-3" />
+                                                    Completed
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             </CardContent>
                         </Card>
