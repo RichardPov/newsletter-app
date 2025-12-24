@@ -4,22 +4,18 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
 import {
     Linkedin,
     Twitter,
     Calendar,
-    Clock,
     Trash2,
-    Edit,
-    CheckCircle2
+    Edit
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { deletePost, updatePost } from "@/lib/post-actions" // Using the new actions
+import { deletePost } from "@/lib/post-actions"
 import { toast } from "sonner"
 import { format } from "date-fns"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar as CalendarPicker } from "@/components/ui/calendar"
+import { EditPostDialog } from "@/components/edit-post-dialog"
 
 interface Post {
     id: string
@@ -36,25 +32,17 @@ interface ScheduleListProps {
 
 export function ScheduleList({ initialPosts }: ScheduleListProps) {
     const [posts, setPosts] = useState(initialPosts)
-    const [editingId, setEditingId] = useState<string | null>(null)
-    const [editContent, setEditContent] = useState("")
-    const [editDate, setEditDate] = useState<Date | undefined>(undefined)
+    const [editingPost, setEditingPost] = useState<Post | null>(null)
 
     // Sort: Scheduled first (asc), then drafts (desc by creation)
-    // Sort: Scheduled first (asc), then drafts (desc by creation)
     const sortedPosts = [...posts].sort((a, b) => {
-        // Both are scheduled
         if (a.status === "SCHEDULED" && b.status === "SCHEDULED") {
             if (!a.scheduledFor) return 1
             if (!b.scheduledFor) return -1
             return new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime()
         }
-
-        // One is scheduled, one is draft
         if (a.status === "SCHEDULED") return -1
         if (b.status === "SCHEDULED") return 1
-
-        // Both are drafts (or other), sort by created desc
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
 
@@ -86,34 +74,11 @@ export function ScheduleList({ initialPosts }: ScheduleListProps) {
         }
     }
 
-    const startEditing = (post: Post) => {
-        setEditingId(post.id)
-        setEditContent(post.content)
-        setEditDate(post.scheduledFor ? new Date(post.scheduledFor) : undefined)
-    }
-
-    const handleSaveEdit = async () => {
-        if (!editingId) return
-
-        try {
-            await updatePost(editingId, { // This updatePost needs to handle partials
-                content: editContent,
-                scheduledFor: editDate,
-                status: editDate ? "SCHEDULED" : "DRAFT"
-            })
-
-            setPosts(posts.map(p => p.id === editingId ? {
-                ...p,
-                content: editContent,
-                scheduledFor: editDate || null,
-                status: editDate ? "SCHEDULED" : "DRAFT"
-            } : p))
-
-            setEditingId(null)
-            toast.success("Post updated")
-        } catch (error) {
-            toast.error("Failed to update")
-        }
+    const handlePostUpdate = (updatedPost: any) => {
+        // For list view, we can update locally without full reload if we trust the data
+        setPosts(posts.map(p => p.id === updatedPost.id ? updatedPost : p))
+        setEditingPost(null)
+        // window.location.reload() // Optional, but local update is smoother
     }
 
     return (
@@ -128,8 +93,7 @@ export function ScheduleList({ initialPosts }: ScheduleListProps) {
                 ) : (
                     sortedPosts.map(post => (
                         <Card key={post.id} className={cn(
-                            "transition-all",
-                            editingId === post.id && "ring-2 ring-emerald-500",
+                            "transition-all hover:shadow-md",
                             post.status === "SCHEDULED" ? "border-l-4 border-l-emerald-500" : "border-l-4 border-l-slate-300"
                         )}>
                             <CardHeader className="py-4">
@@ -154,79 +118,58 @@ export function ScheduleList({ initialPosts }: ScheduleListProps) {
                                     </div>
 
                                     <div className="flex gap-1">
-                                        {editingId === post.id ? (
-                                            <div className="flex gap-2">
-                                                <Button size="sm" onClick={handleSaveEdit} className="bg-emerald-600 hover:bg-emerald-700">
-                                                    Save Changes
-                                                </Button>
-                                                <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                                                    Cancel
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <Button variant="ghost" size="icon" onClick={() => startEditing(post)}>
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(post.id)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </>
-                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setEditingPost(post)}
+                                            className="text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50"
+                                            title="Schedule Post"
+                                        >
+                                            <Calendar className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setEditingPost(post)}
+                                            className="text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
+                                            title="Edit Post"
+                                        >
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                                            onClick={() => handleDelete(post.id)}
+                                            title="Delete Post"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="py-4 pt-0">
-                                {editingId === post.id ? (
-                                    <div className="space-y-4 mt-2">
-                                        <Textarea
-                                            value={editContent}
-                                            onChange={(e) => setEditContent(e.target.value)}
-                                            className="font-mono text-sm"
-                                            rows={5}
-                                        />
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium">Reschedule:</span>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <Button
-                                                        variant={"outline"}
-                                                        className={cn(
-                                                            "w-[240px] justify-start text-left font-normal",
-                                                            !editDate && "text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        <Calendar className="mr-2 h-4 w-4" />
-                                                        {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0" align="start">
-                                                    <CalendarPicker
-                                                        mode="single"
-                                                        selected={editDate}
-                                                        onSelect={setEditDate}
-                                                        initialFocus
-                                                        disabled={(date) => date < new Date()}
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                            {editDate && (
-                                                <Button variant="ghost" size="sm" onClick={() => setEditDate(undefined)}>
-                                                    Clear Date (Set as Draft)
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono bg-slate-50 dark:bg-slate-900/50 p-3 rounded-md border border-slate-100 dark:border-slate-800">
-                                        {post.content}
-                                    </p>
-                                )}
+                                <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono bg-slate-50 dark:bg-slate-900/50 p-3 rounded-md border border-slate-100 dark:border-slate-800">
+                                    {post.content}
+                                </p>
                             </CardContent>
                         </Card>
                     ))
                 )}
             </div>
+
+            {editingPost && (
+                <EditPostDialog
+                    post={{
+                        ...editingPost,
+                        // Ensure scheduledFor is properly typed for the dialog if needed, 
+                        // though the dialog expects Date | null | undefined which mimics Prisma type
+                    }}
+                    open={!!editingPost}
+                    onOpenChange={(open) => !open && setEditingPost(null)}
+                    onPostUpdated={handlePostUpdate}
+                />
+            )}
         </div>
     )
 }
