@@ -63,13 +63,13 @@ export default async function DashboardPage() {
                 <TabsContent value="overview" className="space-y-4">
                     {/* Getting Started - Interactive Widget */}
                     <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
-                        <Card className="col-span-full border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/10 dark:border-emerald-500/30">
+                        <Card className="col-span-full border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/10 dark:border-blue-500/30">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400">
-                                    <Sparkles className="h-5 w-5" />
+                                <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
+                                    <Sparkles className="h-5 w-5 text-blue-600" />
                                     Getting Started
                                 </CardTitle>
-                                <CardDescription className="text-emerald-700/80 dark:text-emerald-500/80">
+                                <CardDescription className="text-blue-700/80 dark:text-blue-300/80">
                                     Complete these steps to automate your social media growth.
                                 </CardDescription>
                             </CardHeader>
@@ -79,8 +79,8 @@ export default async function DashboardPage() {
                                         <div key={step.id} className={cn(
                                             "flex flex-col gap-3 p-4 rounded-lg border transition-all h-full",
                                             step.isCompleted
-                                                ? "bg-emerald-100/50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800"
-                                                : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm"
+                                                ? "bg-emerald-50/50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/50"
+                                                : "bg-blue-50/50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-800 shadow-sm"
                                         )}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
@@ -88,13 +88,13 @@ export default async function DashboardPage() {
                                                         "h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold",
                                                         step.isCompleted
                                                             ? "bg-emerald-500 text-white"
-                                                            : "bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                                                            : "bg-blue-600 text-white shadow-sm"
                                                     )}>
                                                         {step.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : step.id}
                                                     </div>
                                                     <span className={cn(
                                                         "font-medium",
-                                                        step.isCompleted ? "text-emerald-800 dark:text-emerald-400" : "text-neutral-900 dark:text-neutral-100"
+                                                        step.isCompleted ? "text-emerald-800 dark:text-emerald-400" : "text-blue-900 dark:text-blue-100"
                                                     )}>{step.title}</span>
                                                 </div>
                                             </div>
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
                                             <p className="text-xs text-muted-foreground">{step.description}</p>
 
                                             {!step.isCompleted ? (
-                                                <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-none mt-auto" asChild>
+                                                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-none mt-auto" asChild>
                                                     <Link href={step.href}>
                                                         {step.cta}
                                                         <ArrowRight className="ml-2 h-3 w-3" />

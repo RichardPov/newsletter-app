@@ -71,6 +71,7 @@ export function SocialPostGeneratorDialog({
     const [twitterStyle, setTwitterStyle] = useState("hooky")
 
     // ... rest of state
+    const [isGenerating, setIsGenerating] = useState(false)
 
     const handleGenerate = async () => {
         if (selectedPlatforms.length === 0) {
