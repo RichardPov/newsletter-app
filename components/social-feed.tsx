@@ -21,7 +21,7 @@ import {
     ExternalLink
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { deletePost, updatePost } from "@/lib/social-actions"
+import { deletePost, updatePost, generateSocialPosts } from "@/lib/social-actions"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
@@ -43,6 +43,7 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
     const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [editContent, setEditContent] = useState("")
+    const [generatingId, setGeneratingId] = useState<string | null>(null)
     const router = useRouter()
 
     // Group posts by Article ID
@@ -114,6 +115,31 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
         }
     }
 
+    const handleGenerateMissing = async (articleId: string, platform: 'LINKEDIN' | 'TWITTER') => {
+        setGeneratingId(articleId)
+        try {
+            const result = await generateSocialPosts(articleId, {
+                platforms: [platform]
+            })
+
+            if (result.success && result.posts) {
+                const newPost = platform === 'LINKEDIN' ? result.posts.linkedin : result.posts.twitter
+                if (newPost) {
+                    setPosts(prev => [newPost, ...prev])
+                    toast.success(`${platform === 'LINKEDIN' ? 'LinkedIn' : 'Twitter'} draft generated!`)
+
+                    // Auto-switch tab to new post? Maybe not necessary, but helpful.
+                }
+            } else {
+                toast.error("Failed to generate draft")
+            }
+        } catch (error) {
+            toast.error("Something went wrong")
+        } finally {
+            setGeneratingId(null)
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -143,6 +169,9 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
                     groupedPosts.map((group, groupIndex) => {
                         const groupId = group.articleId || `manual-${groupIndex}`
                         const isExpanded = expandedGroup === groupId
+
+                        const hasLinkedin = group.posts.some(p => p.platform === 'LINKEDIN')
+                        const hasTwitter = group.posts.some(p => p.platform === 'TWITTER')
 
                         return (
                             <Card key={groupId} className={cn("transition-all", isExpanded ? "ring-2 ring-primary/20" : "hover:border-primary/50")}>
@@ -186,19 +215,47 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
                                 {isExpanded && (
                                     <div className="border-t bg-muted/5 p-6 animate-in slide-in-from-top-2 duration-200">
                                         <Tabs defaultValue={group.posts[0].id} className="w-full">
-                                            <TabsList className="w-full justify-start mb-4 h-auto p-1 bg-muted/50">
-                                                {group.posts.map(post => (
-                                                    <TabsTrigger
-                                                        key={`tab-${post.id}`}
-                                                        value={post.id}
-                                                        className="flex items-center gap-2"
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <TabsList className="h-auto p-1 bg-muted/50 justify-start">
+                                                    {group.posts.map(post => (
+                                                        <TabsTrigger
+                                                            key={`tab-${post.id}`}
+                                                            value={post.id}
+                                                            className="flex items-center gap-2"
+                                                        >
+                                                            {getPlatformIcon(post.platform)}
+                                                            {post.platform}
+                                                            <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">{post.status}</Badge>
+                                                        </TabsTrigger>
+                                                    ))}
+                                                </TabsList>
+
+                                                {/* Add Missing Platform Buttons */}
+                                                {group.articleId && !hasLinkedin && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-9 border-dashed text-muted-foreground hover:text-blue-600 hover:border-blue-600"
+                                                        onClick={() => handleGenerateMissing(group.articleId!, 'LINKEDIN')}
+                                                        disabled={generatingId === group.articleId}
                                                     >
-                                                        {getPlatformIcon(post.platform)}
-                                                        {post.platform}
-                                                        <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">{post.status}</Badge>
-                                                    </TabsTrigger>
-                                                ))}
-                                            </TabsList>
+                                                        {generatingId === group.articleId ? <Sparkles className="h-3 w-3 animate-spin" /> : <Linkedin className="h-3 w-3 mr-1" />}
+                                                        + LinkedIn
+                                                    </Button>
+                                                )}
+                                                {group.articleId && !hasTwitter && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-9 border-dashed text-muted-foreground hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white"
+                                                        onClick={() => handleGenerateMissing(group.articleId!, 'TWITTER')}
+                                                        disabled={generatingId === group.articleId}
+                                                    >
+                                                        {generatingId === group.articleId ? <Sparkles className="h-3 w-3 animate-spin" /> : <Twitter className="h-3 w-3 mr-1" />}
+                                                        + Twitter
+                                                    </Button>
+                                                )}
+                                            </div>
 
                                             {group.posts.map(post => (
                                                 <TabsContent key={post.id} value={post.id} className="mt-0">
