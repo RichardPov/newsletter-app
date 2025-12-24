@@ -162,34 +162,40 @@ export function SocialPostGeneratorDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col">
-                <DialogHeader>
+            <DialogContent className={cn(
+                "flex flex-col gap-0 p-0 sm:max-w-[600px] max-h-[90vh] overflow-hidden",
+                step === "review" && "sm:max-w-[900px]" // Wider for review
+            )}>
+                <DialogHeader className="px-6 py-4 border-b">
                     <DialogTitle className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-emerald-500" />
                         {step === "config" ? "Create Draft" : "Edit Draft & Schedule"}
                     </DialogTitle>
                     <DialogDescription>
                         {step === "config"
-                            ? `Convert "${articleTitle}" into a fresh social media draft.`
-                            : "Refine your new draft below. Save it for later or schedule it immediately."
+                            ? "Select platforms and customize the tone for your post."
+                            : "Refine your content below before saving or scheduling."
                         }
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto py-4">
+                <div className="flex-1 overflow-y-auto px-6 py-6">
                     {step === "config" ? (
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             {/* Platform Selection */}
-                            <div className="space-y-3">
-                                <Label className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">Destinations</Label>
+                            <div className="space-y-4">
+                                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-[10px]">1</span>
+                                    Choose Destinations
+                                </Label>
                                 <div className="grid grid-cols-2 gap-4">
                                     {/* LinkedIn Card */}
                                     <div
                                         className={cn(
-                                            "relative flex flex-col items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-blue-400/50",
+                                            "relative flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm",
                                             selectedPlatforms.includes("LINKEDIN")
-                                                ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20"
-                                                : "border-muted/40 hover:bg-muted/50"
+                                                ? "border-blue-600 bg-blue-50/50"
+                                                : "border-border hover:border-blue-200"
                                         )}
                                         onClick={() => {
                                             if (selectedPlatforms.includes("LINKEDIN")) {
@@ -200,25 +206,27 @@ export function SocialPostGeneratorDialog({
                                         }}
                                     >
                                         <div className={cn(
-                                            "absolute top-3 right-3 h-5 w-5 rounded-md border flex items-center justify-center transition-colors",
+                                            "flex items-center justify-center h-5 w-5 rounded-full border transition-colors shrink-0",
                                             selectedPlatforms.includes("LINKEDIN") ? "bg-blue-600 border-blue-600" : "border-muted-foreground/30"
                                         )}>
-                                            {selectedPlatforms.includes("LINKEDIN") && <Check className="h-3.5 w-3.5 text-white" />}
+                                            {selectedPlatforms.includes("LINKEDIN") && <Check className="h-3 w-3 text-white" />}
                                         </div>
 
-                                        <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                            <Linkedin className="h-5 w-5 text-blue-600" />
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                                                <Linkedin className="h-5 w-5 text-blue-700" />
+                                            </div>
+                                            <span className="font-medium text-sm">LinkedIn</span>
                                         </div>
-                                        <span className="font-semibold text-sm">LinkedIn Post</span>
                                     </div>
 
                                     {/* Twitter Card */}
                                     <div
                                         className={cn(
-                                            "relative flex flex-col items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-black/30 dark:hover:border-white/30",
+                                            "relative flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm",
                                             selectedPlatforms.includes("TWITTER")
-                                                ? "border-black dark:border-white bg-neutral-100/50 dark:bg-neutral-900"
-                                                : "border-muted/40 hover:bg-muted/50"
+                                                ? "border-black dark:border-white bg-neutral-50/50 dark:bg-neutral-900/50"
+                                                : "border-border hover:border-neutral-300"
                                         )}
                                         onClick={() => {
                                             if (selectedPlatforms.includes("TWITTER")) {
@@ -229,193 +237,190 @@ export function SocialPostGeneratorDialog({
                                         }}
                                     >
                                         <div className={cn(
-                                            "absolute top-3 right-3 h-5 w-5 rounded-md border flex items-center justify-center transition-colors",
+                                            "flex items-center justify-center h-5 w-5 rounded-full border transition-colors shrink-0",
                                             selectedPlatforms.includes("TWITTER") ? "bg-black dark:bg-white border-black dark:border-white" : "border-muted-foreground/30"
                                         )}>
-                                            {selectedPlatforms.includes("TWITTER") && <Check className="h-3.5 w-3.5 text-white dark:text-black" />}
+                                            {selectedPlatforms.includes("TWITTER") && <Check className="h-3 w-3 text-white dark:text-black" />}
                                         </div>
 
-                                        <div className="h-10 w-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
-                                            <Twitter className="h-5 w-5 text-black dark:text-white" />
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-9 w-9 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
+                                                <Twitter className="h-5 w-5 text-black dark:text-white" />
+                                            </div>
+                                            <span className="font-medium text-sm">Twitter</span>
                                         </div>
-                                        <span className="font-semibold text-sm">Twitter Thread</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Configuration Tabs */}
-                            <Tabs defaultValue={selectedPlatforms[0] || "linkedin"} className="w-full flex-1 flex flex-col">
-                                <TabsList className="grid w-full grid-cols-2 h-10 bg-muted/50 p-1 mb-2">
-                                    <TabsTrigger value="linkedin" disabled={!selectedPlatforms.includes("LINKEDIN")} className="data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2">
-                                        <Linkedin className="h-3.5 w-3.5" />
-                                        LinkedIn Settings
-                                    </TabsTrigger>
-                                    <TabsTrigger value="twitter" disabled={!selectedPlatforms.includes("TWITTER")} className="data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2">
-                                        <Twitter className="h-3.5 w-3.5" />
-                                        Twitter Settings
-                                    </TabsTrigger>
-                                </TabsList>
+                            <div className="space-y-4">
+                                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-[10px]">2</span>
+                                    Customize Content
+                                </Label>
 
-                                <div className="flex-1">
-                                    <TabsContent value="linkedin" className="space-y-4 mt-0 animate-in fade-in-50 slide-in-from-top-1">
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                                    <Mic className="h-3 w-3" />
-                                                    Tone of Voice
-                                                </Label>
-                                                <Select value={linkedinTone} onValueChange={setLinkedinTone}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {TONE_OPTIONS.map(tone => (
-                                                            <SelectItem key={tone.value} value={tone.value}>
-                                                                <div className="flex flex-col py-1">
-                                                                    <span className="font-medium text-sm">{tone.label}</span>
-                                                                    <span className="text-[10px] text-muted-foreground">{tone.description}</span>
-                                                                </div>
-                                                            </SelectItem>
-                                                        ))}
-                                                        {customToneName && (
-                                                            <SelectItem value="custom">
-                                                                <div className="flex flex-col py-1">
-                                                                    <span className="font-medium text-sm">✨ Custom: {customToneName}</span>
-                                                                </div>
-                                                            </SelectItem>
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                                    <PenTool className="h-3 w-3" />
-                                                    Post Style
-                                                </Label>
-                                                <Select value={linkedinStyle} onValueChange={setLinkedinStyle}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {STYLE_OPTIONS.map(style => (
-                                                            <SelectItem key={style.value} value={style.value}>
-                                                                <div className="flex flex-col py-1">
-                                                                    <span className="font-medium text-sm">{style.label}</span>
-                                                                    <span className="text-[10px] text-muted-foreground">{style.description}</span>
-                                                                </div>
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                    </TabsContent>
+                                <Tabs defaultValue={selectedPlatforms[0] || "linkedin"} className="w-full">
+                                    <TabsList className="w-full grid grid-cols-2 p-1 bg-muted/30">
+                                        <TabsTrigger value="linkedin" disabled={!selectedPlatforms.includes("LINKEDIN")} className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                            LinkedIn
+                                        </TabsTrigger>
+                                        <TabsTrigger value="twitter" disabled={!selectedPlatforms.includes("TWITTER")} className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                            Twitter
+                                        </TabsTrigger>
+                                    </TabsList>
 
-                                    <TabsContent value="twitter" className="space-y-4 mt-0 animate-in fade-in-50 slide-in-from-top-1">
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                                    <Mic className="h-3 w-3" />
-                                                    Tone of Voice
-                                                </Label>
-                                                <Select value={twitterTone} onValueChange={setTwitterTone}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {TONE_OPTIONS.map(tone => (
-                                                            <SelectItem key={tone.value} value={tone.value}>
-                                                                <div className="flex flex-col py-1">
-                                                                    <span className="font-medium text-sm">{tone.label}</span>
-                                                                    <span className="text-[10px] text-muted-foreground">{tone.description}</span>
-                                                                </div>
-                                                            </SelectItem>
-                                                        ))}
-                                                        {customToneName && (
-                                                            <SelectItem value="custom">
-                                                                <div className="flex flex-col py-1">
-                                                                    <span className="font-medium text-sm">✨ Custom: {customToneName}</span>
-                                                                </div>
-                                                            </SelectItem>
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
+                                    <div className="pt-4 px-1">
+                                        <TabsContent value="linkedin" className="space-y-4 mt-0 animate-in fade-in-50 slide-in-from-top-1">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                                        <Mic className="h-3.5 w-3.5" />
+                                                        Tone
+                                                    </Label>
+                                                    <Select value={linkedinTone} onValueChange={setLinkedinTone}>
+                                                        <SelectTrigger className="w-full bg-white">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {TONE_OPTIONS.map(tone => (
+                                                                <SelectItem key={tone.value} value={tone.value}>
+                                                                    <div className="flex flex-col py-0.5">
+                                                                        <span className="font-medium text-sm">{tone.label}</span>
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                            {customToneName && (
+                                                                <SelectItem value="custom">✨ Custom: {customToneName}</SelectItem>
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                                        <PenTool className="h-3.5 w-3.5" />
+                                                        Style
+                                                    </Label>
+                                                    <Select value={linkedinStyle} onValueChange={setLinkedinStyle}>
+                                                        <SelectTrigger className="w-full bg-white">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {STYLE_OPTIONS.map(style => (
+                                                                <SelectItem key={style.value} value={style.value}>
+                                                                    <div className="flex flex-col py-0.5">
+                                                                        <span className="font-medium text-sm">{style.label}</span>
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                                    <MessageSquare className="h-3 w-3" />
-                                                    Thread Style
-                                                </Label>
-                                                <Select value={twitterStyle} onValueChange={setTwitterStyle}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {STYLE_OPTIONS.filter(s => s.value !== 'professional').map(style => (
-                                                            <SelectItem key={style.value} value={style.value}>
-                                                                <div className="flex flex-col py-1">
-                                                                    <span className="font-medium text-sm">{style.label}</span>
-                                                                    <span className="text-[10px] text-muted-foreground">{style.description}</span>
-                                                                </div>
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                        </TabsContent>
+
+                                        <TabsContent value="twitter" className="space-y-4 mt-0 animate-in fade-in-50 slide-in-from-top-1">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                                        <Mic className="h-3.5 w-3.5" />
+                                                        Tone
+                                                    </Label>
+                                                    <Select value={twitterTone} onValueChange={setTwitterTone}>
+                                                        <SelectTrigger className="w-full bg-white">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {TONE_OPTIONS.map(tone => (
+                                                                <SelectItem key={tone.value} value={tone.value}>
+                                                                    <div className="flex flex-col py-0.5">
+                                                                        <span className="font-medium text-sm">{tone.label}</span>
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                            {customToneName && (
+                                                                <SelectItem value="custom">✨ Custom: {customToneName}</SelectItem>
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                                                        <MessageSquare className="h-3.5 w-3.5" />
+                                                        Format
+                                                    </Label>
+                                                    <Select value={twitterStyle} onValueChange={setTwitterStyle}>
+                                                        <SelectTrigger className="w-full bg-white">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {STYLE_OPTIONS.filter(s => s.value !== 'professional').map(style => (
+                                                                <SelectItem key={style.value} value={style.value}>
+                                                                    <div className="flex flex-col py-0.5">
+                                                                        <span className="font-medium text-sm">{style.label}</span>
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </TabsContent>
-                                </div>
-                            </Tabs>
+                                        </TabsContent>
+                                    </div>
+                                </Tabs>
+                            </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col">
+                        <div className="h-full flex flex-col gap-4">
                             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
                                 <TabsList className="grid w-full grid-cols-2 mb-4">
-                                    <TabsTrigger value="linkedin">
-                                        <Linkedin className="mr-2 h-4 w-4" />
-                                        LinkedIn
+                                    <TabsTrigger value="linkedin" className="gap-2">
+                                        <Linkedin className="h-4 w-4" />
+                                        LinkedIn Draft
                                     </TabsTrigger>
-                                    <TabsTrigger value="twitter">
-                                        <Twitter className="mr-2 h-4 w-4" />
-                                        Twitter
+                                    <TabsTrigger value="twitter" className="gap-2">
+                                        <Twitter className="h-4 w-4" />
+                                        Twitter Thread
                                     </TabsTrigger>
                                 </TabsList>
 
-                                <div className="flex-1 overflow-y-auto">
-                                    <TabsContent value="linkedin" className="h-full mt-0 border-none p-0 data-[state=inactive]:hidden">
-                                        <div className="space-y-4 h-full flex flex-col">
-                                            <div className="flex items-center justify-between">
-                                                <Label className="text-sm font-medium">LinkedIn Content</Label>
+                                <div className="flex-1 min-h-[400px]">
+                                    <TabsContent value="linkedin" className="h-full mt-0 border-none p-0 data-[state=inactive]:hidden group">
+                                        <div className="relative h-full flex flex-col rounded-xl border bg-muted/20 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                                            <div className="flex items-center justify-between p-3 border-b bg-white/50">
+                                                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Post Content</Label>
                                                 {generatedIds.linkedin && (
-                                                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
-                                                        Draft Saved
+                                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                                        <Check className="w-3 h-3 mr-1" />
+                                                        Saved
                                                     </Badge>
                                                 )}
                                             </div>
                                             <Textarea
                                                 value={generatedLinkedIn}
                                                 onChange={(e) => setGeneratedLinkedIn(e.target.value)}
-                                                className="flex-1 min-h-[300px] font-sans resize-none p-4 leading-relaxed"
-                                                placeholder="Generating LinkedIn post..."
+                                                className="flex-1 border-none focus-visible:ring-0 resize-none p-4 text-sm leading-relaxed bg-transparent"
+                                                placeholder="Write your LinkedIn post here..."
                                             />
                                         </div>
                                     </TabsContent>
 
                                     <TabsContent value="twitter" className="h-full mt-0 border-none p-0 data-[state=inactive]:hidden">
-                                        <div className="space-y-4 h-full flex flex-col">
-                                            <div className="flex items-center justify-between">
-                                                <Label className="text-sm font-medium">Twitter Thread</Label>
+                                        <div className="relative h-full flex flex-col rounded-xl border bg-muted/20 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                                            <div className="flex items-center justify-between p-3 border-b bg-white/50">
+                                                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Thread Content</Label>
                                                 {generatedIds.twitter && (
-                                                    <Badge variant="secondary" className="bg-neutral-100 text-neutral-700 border-neutral-200">
-                                                        Draft Saved
+                                                    <Badge variant="outline" className="bg-neutral-100 text-neutral-700 border-neutral-200">
+                                                        <Check className="w-3 h-3 mr-1" />
+                                                        Saved
                                                     </Badge>
                                                 )}
                                             </div>
                                             <Textarea
                                                 value={generatedTwitter}
                                                 onChange={(e) => setGeneratedTwitter(e.target.value)}
-                                                className="flex-1 min-h-[300px] font-mono text-sm resize-none p-4"
-                                                placeholder="Generating Twitter thread..."
+                                                className="flex-1 border-none focus-visible:ring-0 resize-none p-4 font-mono text-sm bg-transparent"
+                                                placeholder="Write your Twitter thread here..."
                                             />
                                         </div>
                                     </TabsContent>
@@ -425,9 +430,9 @@ export function SocialPostGeneratorDialog({
                     )}
                 </div>
 
-                <div className="flex items-center justify-between gap-3 pt-2 border-t mt-auto">
+                <div className="p-6 pt-2">
                     {step === "config" ? (
-                        <>
+                        <div className="flex items-center justify-between">
                             <Button
                                 variant="ghost"
                                 onClick={() => onOpenChange(false)}
@@ -438,7 +443,7 @@ export function SocialPostGeneratorDialog({
                             <Button
                                 onClick={handleGenerate}
                                 disabled={isGenerating || selectedPlatforms.length === 0}
-                                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 gap-2"
+                                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 gap-2 shadow-sm"
                             >
                                 {isGenerating ? (
                                     <>
@@ -452,40 +457,36 @@ export function SocialPostGeneratorDialog({
                                     </>
                                 )}
                             </Button>
-                        </>
+                        </div>
                     ) : (
-                        <>
+                        <div className="flex items-center justify-between">
                             <Button
                                 variant="outline"
                                 onClick={() => setStep("config")}
                             >
                                 Back
                             </Button>
-                            <div className="flex gap-2">
-                                <div className="flex flex-col items-end mr-4">
-                                    <div className="flex items-center text-xs text-muted-foreground">
-                                        <CalendarIcon className="mr-1 h-3 w-3" />
-                                        Schedule for
-                                    </div>
-                                    {/* Date Picker would go here, simplified for now */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-xs text-muted-foreground">Status</span>
                                     <span className="text-sm font-medium">
-                                        {scheduledDate ? format(scheduledDate, "PPP") : "Save as Draft"}
+                                        {scheduledDate ? format(scheduledDate, "MMM d, yyyy") : "Draft Mode"}
                                     </span>
                                 </div>
                                 <Button
                                     onClick={handleSave}
                                     disabled={isSaving}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm"
                                 >
                                     {isSaving ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
                                         <Save className="h-4 w-4" />
                                     )}
-                                    {scheduledDate ? "Schedule All" : "Save All to Planner"}
+                                    {scheduledDate ? "Schedule All" : "Save All"}
                                 </Button>
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
             </DialogContent>
