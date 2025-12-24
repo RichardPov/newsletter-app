@@ -102,78 +102,59 @@ export function EditPostDialog({ open, onOpenChange, post, onPostUpdated }: Edit
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium text-muted-foreground">Schedule Date</Label>
-                        <div className="flex gap-2">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !date && "text-muted-foreground"
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {date ? format(date, "PPP") : <span>Pick a date to schedule</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={date}
-                                        onSelect={setDate}
-                                        initialFocus
-                                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-
-                            {date && (
+                    <div className="p-6 border-t bg-muted/5">
+                        <div className="flex items-center justify-between gap-4">
+                            <Button
+                                variant="ghost"
+                                onClick={() => onOpenChange(false)}
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                Cancel
+                            </Button>
+                            <div className="flex items-center gap-3">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                "w-[200px] justify-start text-left font-normal bg-white",
+                                                !date && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {date ? format(date, "PPP") : <span>Schedule for...</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="end">
+                                        <Calendar
+                                            mode="single"
+                                            selected={date}
+                                            onSelect={setDate}
+                                            initialFocus
+                                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                                 <Button
-                                    variant="ghost"
-                                    onClick={() => setDate(undefined)}
-                                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className={cn(
+                                        "gap-2 shadow-sm min-w-[140px] text-white",
+                                        date
+                                            ? "bg-emerald-600 hover:bg-emerald-700"
+                                            : "bg-blue-600 hover:bg-blue-700"
+                                    )}
                                 >
-                                    Clear
+                                    {isSaving ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        date ? <CalendarIcon className="h-4 w-4" /> : <Save className="h-4 w-4" />
+                                    )}
+                                    {date ? "Schedule Post" : "Save Changes"}
                                 </Button>
-                            )}
+                            </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            {date
-                                ? "Post will be automatically published on this date."
-                                : "Post will be saved as a Draft."}
-                        </p>
                     </div>
-                </div>
-
-                <div className="p-4 bg-muted/30 border-t flex justify-end gap-3">
-                    <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className={cn(
-                            "min-w-[130px] gap-2 text-white",
-                            date
-                                ? "bg-emerald-600 hover:bg-emerald-700"
-                                : "bg-blue-600 hover:bg-blue-700"
-                        )}
-                    >
-                        {isSaving ? (
-                            <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                {date ? <CalendarIcon className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-                                {date ? "Schedule Post" : "Save Changes"}
-                            </>
-                        )}
-                    </Button>
-                </div>
             </DialogContent>
         </Dialog>
     )
