@@ -63,55 +63,61 @@ export default async function DashboardPage() {
                 <TabsContent value="overview" className="space-y-4">
                     {/* Getting Started - Interactive Widget */}
                     <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
-                        <Card className="col-span-full border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/10 dark:border-blue-500/30">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
-                                    <Sparkles className="h-5 w-5 text-blue-600" />
-                                    Getting Started
-                                </CardTitle>
-                                <CardDescription className="text-blue-700/80 dark:text-blue-300/80">
-                                    Complete these steps to automate your social media growth.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
+                        <Card className="col-span-full border-none shadow-none bg-transparent p-0">
+                            <div className="mb-4 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold tracking-tight">Getting Started</h3>
+                                    <p className="text-sm text-muted-foreground">Complete these steps to set up your automated workflow.</p>
+                                </div>
+                            </div>
+
+                            <CardContent className="p-0">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {steps.map((step) => (
                                         <div key={step.id} className={cn(
-                                            "flex flex-col gap-3 p-4 rounded-lg border transition-all h-full",
+                                            "relative flex flex-col gap-4 p-5 rounded-xl border bg-card transition-all h-full",
                                             step.isCompleted
-                                                ? "bg-emerald-50/50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/50"
-                                                : "bg-blue-50/50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-800 shadow-sm"
+                                                ? "border-emerald-100 bg-emerald-50/30 dark:bg-emerald-950/5 dark:border-emerald-900/30 opacity-80 hover:opacity-100"
+                                                : "border-blue-100 bg-white shadow-sm hover:shadow-md dark:bg-neutral-900 dark:border-neutral-800 ring-1 ring-blue-500/10"
                                         )}>
                                             <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <div className={cn(
-                                                        "h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold",
-                                                        step.isCompleted
-                                                            ? "bg-emerald-500 text-white"
-                                                            : "bg-blue-600 text-white shadow-sm"
-                                                    )}>
-                                                        {step.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : step.id}
-                                                    </div>
-                                                    <span className={cn(
-                                                        "font-medium",
-                                                        step.isCompleted ? "text-emerald-800 dark:text-emerald-400" : "text-blue-900 dark:text-blue-100"
-                                                    )}>{step.title}</span>
+                                                <div className={cn(
+                                                    "h-10 w-10 rounded-lg flex items-center justify-center text-sm font-bold transition-colors",
+                                                    step.isCompleted
+                                                        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                                        : "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
+                                                )}>
+                                                    {step.isCompleted ? <CheckCircle2 className="h-5 w-5" /> : step.id}
                                                 </div>
+                                                {step.isCompleted && (
+                                                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100">
+                                                        Done
+                                                    </Badge>
+                                                )}
                                             </div>
 
-                                            <p className="text-xs text-muted-foreground">{step.description}</p>
+                                            <div className="space-y-1">
+                                                <h4 className={cn("font-semibold", step.isCompleted ? "text-muted-foreground" : "text-foreground")}>
+                                                    {step.title}
+                                                </h4>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                                    {step.description}
+                                                </p>
+                                            </div>
 
                                             {!step.isCompleted ? (
-                                                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-none mt-auto" asChild>
+                                                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-auto h-9" asChild>
                                                     <Link href={step.href}>
                                                         {step.cta}
-                                                        <ArrowRight className="ml-2 h-3 w-3" />
+                                                        <ArrowRight className="ml-2 h-3 w-3 opacity-70" />
                                                     </Link>
                                                 </Button>
                                             ) : (
-                                                <div className="mt-auto flex items-center text-xs text-emerald-600 font-medium pt-2">
-                                                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                                                    Completed
+                                                <div className="mt-auto h-9 flex items-center text-xs text-emerald-600 font-medium">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                                        Completed
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>
