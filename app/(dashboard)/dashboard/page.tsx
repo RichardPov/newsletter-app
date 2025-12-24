@@ -9,6 +9,8 @@ import { auth } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 
+import { format } from "date-fns"
+
 export default async function DashboardPage() {
     const { userId } = await auth()
     if (!userId) return null
@@ -23,6 +25,31 @@ export default async function DashboardPage() {
     const scheduledPostsCount = await prisma.post.count({
         where: { userId, status: "SCHEDULED" }
     })
+
+    // Fetch Upcoming Posts
+    const upcomingPosts = await prisma.post.findMany({
+        where: {
+            userId,
+            status: "SCHEDULED",
+            scheduledFor: {
+                gte: new Date()
+            }
+        },
+        orderBy: {
+            scheduledFor: "asc"
+        },
+        take: 3
+    })
+
+    // Fetch Recent Activity (latest posts created/updated)
+    const recentPosts = await prisma.post.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        include: { article: true } // To show source article title if available
+    })
+
+    const timeSavedHours = (generatedPostsCount * 0.5).toFixed(1) // Assume 30 mins per post
 
     const steps = [
         {
@@ -137,9 +164,9 @@ export default async function DashboardPage() {
                                 <Sparkles className="h-4 w-4 text-emerald-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">12</div>
+                                <div className="text-2xl font-bold">{generatedPostsCount}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    +4 this week
+                                    Total generated
                                 </p>
                             </CardContent>
                         </Card>
@@ -151,7 +178,7 @@ export default async function DashboardPage() {
                                 <CalendarDays className="h-4 w-4 text-blue-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">8</div>
+                                <div className="text-2xl font-bold">{scheduledPostsCount}</div>
                                 <p className="text-xs text-muted-foreground">
                                     Upcoming posts
                                 </p>
@@ -163,9 +190,9 @@ export default async function DashboardPage() {
                                 <Clock className="h-4 w-4 text-orange-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">4.5h</div>
+                                <div className="text-2xl font-bold">{timeSavedHours}h</div>
                                 <p className="text-xs text-muted-foreground">
-                                    Estimated this month
+                                    Estimated total
                                 </p>
                             </CardContent>
                         </Card>
@@ -177,7 +204,7 @@ export default async function DashboardPage() {
                                 <Activity className="h-4 w-4 text-purple-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">3</div>
+                                <div className="text-2xl font-bold">{activeFeedsCount}</div>
                                 <p className="text-xs text-muted-foreground">
                                     Feeds monitored
                                 </p>
@@ -196,25 +223,30 @@ export default async function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
-                                    {/* Mock Data */}
-                                    <div className="flex items-center border p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                                        <div className="h-8 w-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
-                                            <Linkedin className="h-4 w-4" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium">AI Trends in 2025</p>
-                                            <p className="text-xs text-muted-foreground">Tomorrow, 9:00 AM</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center border p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                                        <div className="h-8 w-8 rounded bg-black text-white flex items-center justify-center mr-3">
-                                            <Twitter className="h-4 w-4" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium">SaaS Growth Hacks</p>
-                                            <p className="text-xs text-muted-foreground">Wed, 2:00 PM</p>
-                                        </div>
-                                    </div>
+                                    {upcomingPosts.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground text-center py-4">
+                                            No upcoming posts scheduled.
+                                        </p>
+                                    ) : (
+                                        upcomingPosts.map((post) => (
+                                            <div key={post.id} className="flex items-center border p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                                                <div className={cn(
+                                                    "h-8 w-8 rounded flex items-center justify-center mr-3",
+                                                    post.platform === "LINKEDIN" ? "bg-blue-100 text-blue-600" : "bg-black text-white"
+                                                )}>
+                                                    {post.platform === "LINKEDIN" ? <Linkedin className="h-4 w-4" /> : <Twitter className="h-4 w-4" />}
+                                                </div>
+                                                <div className="overflow-hidden">
+                                                    <p className="text-sm font-medium truncate w-[200px] sm:w-[300px]">
+                                                        {post.content}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {post.scheduledFor ? format(post.scheduledFor, "MMM d, h:mm a") : "Scheduled"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                     <div className="text-center pt-2">
                                         <Link href="/dashboard/schedule" className="text-sm text-emerald-600 hover:underline">
                                             View full planner →
@@ -231,13 +263,35 @@ export default async function DashboardPage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-8">
-                                    <div className="flex items-center">
-                                        <div className="ml-auto font-medium text-sm text-muted-foreground">Just now</div>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground text-center py-8">
-                                        No recent activity. Start by generating a post!
-                                    </p>
+                                <div className="space-y-6">
+                                    {recentPosts.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground text-center py-8">
+                                            No recent activity. Start by generating a post!
+                                        </p>
+                                    ) : (
+                                        recentPosts.map((post) => (
+                                            <div key={post.id} className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3 overflow-hidden">
+                                                    <div className={cn(
+                                                        "h-2 w-2 rounded-full flex-shrink-0",
+                                                        post.status === "PUBLISHED" ? "bg-emerald-500" :
+                                                            post.status === "SCHEDULED" ? "bg-blue-500" : "bg-slate-300"
+                                                    )} />
+                                                    <div className="flex flex-col overflow-hidden">
+                                                        <span className="text-sm font-medium truncate max-w-[250px]">
+                                                            {post.article?.title ? `Draft from "${post.article.title}"` : (post.content.slice(0, 30) + "...")}
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground capitalize">
+                                                            {post.platform.toLowerCase()} • {format(post.createdAt, "MMM d")}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <Badge variant="outline" className="ml-2 text-[10px] h-5">
+                                                    {post.status}
+                                                </Badge>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
