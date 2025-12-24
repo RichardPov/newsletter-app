@@ -152,12 +152,12 @@ export function SocialPostGeneratorDialog({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-emerald-500" />
-                        {step === "config" ? "Generate Social Posts" : "Review & Schedule"}
+                        {step === "config" ? "Create Social Drafts" : "Review & Schedule"}
                     </DialogTitle>
                     <DialogDescription>
                         {step === "config"
-                            ? `Customize tone and style for: "${articleTitle}"`
-                            : "Edit your generated content below and schedule it."
+                            ? `Generate and save drafts based on: "${articleTitle}"`
+                            : "Edit your draft content below and save or schedule it."
                         }
                     </DialogDescription>
                 </DialogHeader>
