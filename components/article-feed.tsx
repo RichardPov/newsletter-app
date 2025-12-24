@@ -7,19 +7,9 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Share2, FileText, CheckCircle, RefreshCw, Calendar as CalendarIcon, Loader2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
-import {
-    Dialog  // Still used for wrapping? No, SocialPostGeneratorDialog has its own Dialog.
-} from "@/components/ui/dialog"
-// Actually SocialPostGeneratorDialog is a self-contained component that renders Dialog.
-// But we might need Dialog type? No.
-// Let's replace the imports.
-
 import { SocialPostGeneratorDialog } from "@/components/social-post-generator-dialog"
-import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-// Remove unused
-import { Calendar } from "@/components/ui/calendar"
-import { cn } from "@/lib/utils"
+// removed unused imports
 import { toast } from "sonner"
 import { refreshFeeds } from "@/lib/actions"
 import { useAppStore } from "@/lib/store"
