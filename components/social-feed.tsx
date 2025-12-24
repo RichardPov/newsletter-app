@@ -25,6 +25,7 @@ import { deletePost, updatePost, generateSocialPosts } from "@/lib/social-action
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
+import { EditPostDialog } from "./edit-post-dialog"
 
 interface SocialFeedProps {
     initialPosts: any[]
@@ -41,10 +42,8 @@ type GroupedPost = {
 export function SocialFeed({ initialPosts }: SocialFeedProps) {
     const [posts, setPosts] = useState(initialPosts)
     const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
-    const [editingId, setEditingId] = useState<string | null>(null)
-    const [editContent, setEditContent] = useState("")
-    const [generatingId, setGeneratingId] = useState<string | null>(null)
-    const router = useRouter()
+    const [editDialogOpen, setEditDialogOpen] = useState(false)
+    const [selectedPost, setSelectedPost] = useState<any>(null)
 
     // Group posts by Article ID
     const groupedPosts: GroupedPost[] = []
@@ -99,20 +98,13 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
         }
     }
 
-    const handleEdit = (post: any) => {
-        setEditingId(post.id)
-        setEditContent(post.content)
+    const handleEditPost = (post: any) => {
+        setSelectedPost(post)
+        setEditDialogOpen(true)
     }
 
-    const handleSaveEdit = async (id: string) => {
-        try {
-            await updatePost(id, { content: editContent })
-            setPosts(posts.map(p => p.id === id ? { ...p, content: editContent } : p))
-            setEditingId(null)
-            toast.success("Draft updated")
-        } catch (error) {
-            toast.error("Failed to update")
-        }
+    const handlePostUpdated = (updatedPost: any) => {
+        setPosts(posts.map(p => p.id === updatedPost.id ? updatedPost : p))
     }
 
     const handleGenerateMissing = async (articleId: string, platform: 'LINKEDIN' | 'TWITTER') => {
@@ -127,8 +119,6 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
                 if (newPost) {
                     setPosts(prev => [newPost, ...prev])
                     toast.success(`${platform === 'LINKEDIN' ? 'LinkedIn' : 'Twitter'} draft generated!`)
-
-                    // Auto-switch tab to new post? Maybe not necessary, but helpful.
                 }
             } else {
                 toast.error("Failed to generate draft")
@@ -261,40 +251,25 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
                                                 <TabsContent key={post.id} value={post.id} className="mt-0">
                                                     <Card className="border-none shadow-none bg-background">
                                                         <CardContent className="p-4 space-y-4">
-                                                            {editingId === post.id ? (
-                                                                <div className="space-y-3">
-                                                                    <Textarea
-                                                                        value={editContent}
-                                                                        onChange={(e) => setEditContent(e.target.value)}
-                                                                        className="min-h-[200px] font-mono text-sm leading-relaxed"
-                                                                    />
-                                                                    <div className="flex justify-end gap-2">
-                                                                        <Button variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
-                                                                        <Button onClick={() => handleSaveEdit(post.id)}>
-                                                                            <Save className="h-4 w-4 mr-2" /> Save Changes
-                                                                        </Button>
-                                                                    </div>
+                                                            <div className="whitespace-pre-wrap font-mono text-sm leading-relaxed p-4 bg-muted/30 rounded-md border border-dashed">
+                                                                {post.content}
+                                                            </div>
+                                                            <div className="flex justify-between items-center pt-2">
+                                                                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                                                                    <FileText className="h-3 w-3" /> {post.content.length} characters
                                                                 </div>
-                                                            ) : (
-                                                                <>
-                                                                    <div className="whitespace-pre-wrap font-mono text-sm leading-relaxed p-4 bg-muted/30 rounded-md border border-dashed">
-                                                                        {post.content}
-                                                                    </div>
-                                                                    <div className="flex justify-between items-center pt-2">
-                                                                        <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                                                            <FileText className="h-3 w-3" /> {post.content.length} characters
-                                                                        </div>
-                                                                        <div className="flex gap-2">
-                                                                            <Button variant="outline" size="sm" onClick={() => handleEdit(post)}>
-                                                                                <Edit className="h-3 w-3 mr-2" /> Edit
-                                                                            </Button>
-                                                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(post.id)}>
-                                                                                <Trash2 className="h-3 w-3 mr-2" /> Delete
-                                                                            </Button>
-                                                                        </div>
-                                                                    </div>
-                                                                </>
-                                                            )}
+                                                                <div className="flex gap-2">
+                                                                    <Button variant="outline" size="sm" onClick={() => handleEditPost(post)} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200 hover:border-emerald-300">
+                                                                        <Calendar className="h-3 w-3 mr-2" /> Schedule
+                                                                    </Button>
+                                                                    <Button variant="outline" size="sm" onClick={() => handleEditPost(post)}>
+                                                                        <Edit className="h-3 w-3 mr-2" /> Edit
+                                                                    </Button>
+                                                                    <Button variant="destructive" size="sm" onClick={() => handleDelete(post.id)}>
+                                                                        <Trash2 className="h-3 w-3 mr-2" /> Delete
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
                                                         </CardContent>
                                                     </Card>
                                                 </TabsContent>
@@ -307,6 +282,15 @@ export function SocialFeed({ initialPosts }: SocialFeedProps) {
                     })
                 )}
             </div>
+
+            {selectedPost && (
+                <EditPostDialog
+                    open={editDialogOpen}
+                    onOpenChange={setEditDialogOpen}
+                    post={selectedPost}
+                    onPostUpdated={handlePostUpdated}
+                />
+            )}
         </div>
     )
 }
