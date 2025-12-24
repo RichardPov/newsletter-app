@@ -64,32 +64,30 @@ export function SocialPostGeneratorDialog({
     const [step, setStep] = useState<"config" | "review">("config")
 
     // Config State
+    const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["LINKEDIN", "TWITTER"])
     const [linkedinTone, setLinkedinTone] = useState("professional")
     const [linkedinStyle, setLinkedinStyle] = useState("professional")
     const [twitterTone, setTwitterTone] = useState("witty")
     const [twitterStyle, setTwitterStyle] = useState("hooky")
-    const [isGenerating, setIsGenerating] = useState(false)
 
-    // Review State
-    const [generatedLinkedIn, setGeneratedLinkedIn] = useState("")
-    const [generatedTwitter, setGeneratedTwitter] = useState("")
-    const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined)
-    const [isSaving, setIsSaving] = useState(false)
-    const [activeTab, setActiveTab] = useState("linkedin")
-
-    const [generatedIds, setGeneratedIds] = useState<{ linkedin?: string, twitter?: string }>({})
-
-    const router = useRouter()
+    // ... rest of state
 
     const handleGenerate = async () => {
+        if (selectedPlatforms.length === 0) {
+            toast.error("Select at least one platform")
+            return
+        }
+
         setIsGenerating(true)
         try {
             const result = await generateSocialPosts(articleId, {
                 linkedinTone,
                 linkedinStyle,
                 twitterTone,
-                twitterStyle
+                twitterStyle,
+                platforms: selectedPlatforms as ('LINKEDIN' | 'TWITTER')[]
             })
+            // ... (rest of handling)
 
             if (result.success && result.posts) {
                 const li = result.posts.linkedin?.content || ""
@@ -176,17 +174,63 @@ export function SocialPostGeneratorDialog({
 
                 <div className="flex-1 overflow-y-auto py-4">
                     {step === "config" ? (
-                        <Tabs defaultValue="linkedin" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="linkedin">
-                                    <Linkedin className="mr-2 h-4 w-4" />
-                                    LinkedIn
-                                </TabsTrigger>
-                                <TabsTrigger value="twitter">
-                                    <Twitter className="mr-2 h-4 w-4" />
-                                    Twitter/X
-                                </TabsTrigger>
-                            </TabsList>
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <Label>Select Platforms</Label>
+                                <div className="flex gap-4">
+                                    <div 
+                                        className={cn(
+                                            "flex items-center gap-2 border rounded-lg p-3 cursor-pointer transition-all",
+                                            selectedPlatforms.includes("LINKEDIN") ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20" : "opacity-60"
+                                        )}
+                                        onClick={() => {
+                                            if (selectedPlatforms.includes("LINKEDIN")) {
+                                                setSelectedPlatforms(prev => prev.filter(p => p !== "LINKEDIN"))
+                                            } else {
+                                                setSelectedPlatforms(prev => [...prev, "LINKEDIN"])
+                                            }
+                                        }}
+                                    >
+                                        <div className={cn("w-4 h-4 rounded border flex items-center justify-center", selectedPlatforms.includes("LINKEDIN") ? "bg-blue-500 border-blue-500" : "border-muted-foreground")}>
+                                            {selectedPlatforms.includes("LINKEDIN") && <div className="w-2 h-2 bg-white rounded-sm" />}
+                                        </div>
+                                        <Linkedin className="h-4 w-4 text-blue-600" />
+                                        <span className="text-sm font-medium">LinkedIn</span>
+                                    </div>
+                                    
+                                    <div 
+                                        className={cn(
+                                            "flex items-center gap-2 border rounded-lg p-3 cursor-pointer transition-all",
+                                            selectedPlatforms.includes("TWITTER") ? "border-black dark:border-white bg-neutral-50 dark:bg-neutral-900" : "opacity-60"
+                                        )}
+                                        onClick={() => {
+                                            if (selectedPlatforms.includes("TWITTER")) {
+                                                setSelectedPlatforms(prev => prev.filter(p => p !== "TWITTER"))
+                                            } else {
+                                                setSelectedPlatforms(prev => [...prev, "TWITTER"])
+                                            }
+                                        }}
+                                    >
+                                        <div className={cn("w-4 h-4 rounded border flex items-center justify-center", selectedPlatforms.includes("TWITTER") ? "bg-black dark:bg-white border-black dark:border-white" : "border-muted-foreground")}>
+                                            {selectedPlatforms.includes("TWITTER") && <div className="w-2 h-2 bg-white dark:bg-black rounded-sm" />}
+                                        </div>
+                                        <Twitter className="h-4 w-4" />
+                                        <span className="text-sm font-medium">Twitter / X</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Tabs defaultValue={selectedPlatforms[0] || "linkedin"} className="w-full">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="linkedin" disabled={!selectedPlatforms.includes("LINKEDIN")}>
+                                        <Linkedin className="mr-2 h-4 w-4" />
+                                        LinkedIn Settings
+                                    </TabsTrigger>
+                                    <TabsTrigger value="twitter" disabled={!selectedPlatforms.includes("TWITTER")}>
+                                        <Twitter className="mr-2 h-4 w-4" />
+                                        Twitter Settings
+                                    </TabsTrigger>
+                                </TabsList>
 
                             <TabsContent value="linkedin" className="space-y-4 pt-4">
                                 <div className="space-y-2">

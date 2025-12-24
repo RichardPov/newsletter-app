@@ -17,6 +17,7 @@ export async function generateSocialPosts(
         linkedinStyle?: string
         twitterTone?: string
         twitterStyle?: string
+        platforms?: ('LINKEDIN' | 'TWITTER')[]
     }
 ) {
     const { userId } = await auth()
@@ -28,6 +29,9 @@ export async function generateSocialPosts(
 
     if (!article) throw new Error("Article not found")
 
+    // Default to both if not specified
+    const platforms = options?.platforms || ['LINKEDIN', 'TWITTER']
+
     // Get custom tone if "custom" is selected
     let customTone = null
     if (options?.linkedinTone === 'custom' || options?.twitterTone === 'custom') {
@@ -37,13 +41,17 @@ export async function generateSocialPosts(
     }
 
     try {
-        // Build LinkedIn prompt with tone and style
-        const linkedinTone = options?.linkedinTone === 'custom'
-            ? `${customTone?.name} (${customTone?.style})`
-            : options?.linkedinTone || 'professional'
-        const linkedinStyle = options?.linkedinStyle || 'professional'
+        let twitterPost = null
+        let linkedinPost = null
 
-        const linkedinSystemPrompt = `You are a LinkedIn content expert. Create an engaging post with these specifications:
+        // Generate LinkedIn Post
+        if (platforms.includes('LINKEDIN')) {
+            const linkedinTone = options?.linkedinTone === 'custom'
+                ? `${customTone?.name} (${customTone?.style})`
+                : options?.linkedinTone || 'professional'
+            const linkedinStyle = options?.linkedinStyle || 'professional'
+
+            const linkedinSystemPrompt = `You are a LinkedIn content expert. Create an engaging post with these specifications:
 - Tone: ${linkedinTone}
 - Style: ${linkedinStyle}
 ${linkedinStyle === 'viral' ? '- Use strong hooks, emotion, and controversy' : ''}
@@ -51,13 +59,37 @@ ${linkedinStyle === 'hooky' ? '- Start with curiosity gap or provocative questio
 ${linkedinStyle === 'story' ? '- Use narrative arc with beginning, middle, end' : ''}
 Format with line breaks for readability. Keep it professional yet engaging.`
 
-        // Build Twitter prompt with tone and style
-        const twitterTone = options?.twitterTone === 'custom'
-            ? `${customTone?.name} (${customTone?.style})`
-            : options?.twitterTone || 'witty'
-        const twitterStyle = options?.twitterStyle || 'hooky'
+            const linkedinCompletion = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: linkedinSystemPrompt },
+                    { role: "user", content: `Create a LinkedIn post about this article:\n\nTitle: ${article.title}\nSummary: ${article.summary}\nURL: ${article.url}` }
+                ],
+                max_tokens: 600,
+                temperature: 0.7
+            })
 
-        const twitterSystemPrompt = `You are a Twitter/X content expert. Create an engaging thread with these specifications:
+            const linkedinContent = linkedinCompletion.choices[0].message.content || "LinkedIn post generation failed"
+
+            linkedinPost = await prisma.post.create({
+                data: {
+                    userId,
+                    articleId,
+                    platform: "LINKEDIN",
+                    content: linkedinContent,
+                    status: "DRAFT"
+                }
+            })
+        }
+
+        // Generate Twitter Post
+        if (platforms.includes('TWITTER')) {
+            const twitterTone = options?.twitterTone === 'custom'
+                ? `${customTone?.name} (${customTone?.style})`
+                : options?.twitterTone || 'witty'
+            const twitterStyle = options?.twitterStyle || 'hooky'
+
+            const twitterSystemPrompt = `You are a Twitter/X content expert. Create an engaging thread with these specifications:
 - Tone: ${twitterTone}
 - Style: ${twitterStyle}
 ${twitterStyle === 'viral' ? '- Use strong hooks, emotional triggers, and controversy' : ''}
@@ -66,64 +98,28 @@ ${twitterStyle === 'thread' ? '- Create 3-5 tweet thread with numbered format' :
 ${twitterStyle === 'story' ? '- Use narrative storytelling across tweets' : ''}
 Format as a thread. First tweet is the hook, last tweet includes a CTA. Keep tweets punchy (under 280 chars).`
 
-        // Generate Twitter thread
-        const twitterCompletion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                {
-                    role: "system",
-                    content: twitterSystemPrompt
-                },
-                {
-                    role: "user",
-                    content: `Create a Twitter thread about this article:\n\nTitle: ${article.title}\nSummary: ${article.summary}\nURL: ${article.url}`
+            const twitterCompletion = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: twitterSystemPrompt },
+                    { role: "user", content: `Create a Twitter thread about this article:\n\nTitle: ${article.title}\nSummary: ${article.summary}\nURL: ${article.url}` }
+                ],
+                max_tokens: 500,
+                temperature: 0.7
+            })
+
+            const twitterContent = twitterCompletion.choices[0].message.content || "Thread generation failed"
+
+            twitterPost = await prisma.post.create({
+                data: {
+                    userId,
+                    articleId,
+                    platform: "TWITTER",
+                    content: twitterContent,
+                    status: "DRAFT"
                 }
-            ],
-            max_tokens: 500,
-            temperature: 0.7
-        })
-
-        const twitterContent = twitterCompletion.choices[0].message.content || "Thread generation failed"
-
-        // Generate LinkedIn post
-        const linkedinCompletion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                {
-                    role: "system",
-                    content: linkedinSystemPrompt
-                },
-                {
-                    role: "user",
-                    content: `Create a LinkedIn post about this article:\n\nTitle: ${article.title}\nSummary: ${article.summary}\nURL: ${article.url}`
-                }
-            ],
-            max_tokens: 600,
-            temperature: 0.7
-        })
-
-        const linkedinContent = linkedinCompletion.choices[0].message.content || "LinkedIn post generation failed"
-
-        // Save both posts to database
-        const twitterPost = await prisma.post.create({
-            data: {
-                userId,
-                articleId,
-                platform: "TWITTER",
-                content: twitterContent,
-                status: "DRAFT"
-            }
-        })
-
-        const linkedinPost = await prisma.post.create({
-            data: {
-                userId,
-                articleId,
-                platform: "LINKEDIN",
-                content: linkedinContent,
-                status: "DRAFT"
-            }
-        })
+            })
+        }
 
         revalidatePath('/dashboard/social')
 
@@ -137,26 +133,34 @@ Format as a thread. First tweet is the hook, last tweet includes a CTA. Keep twe
     } catch (error: any) {
         console.error("Social post generation error:", error)
 
-        // Fallback to mock if OpenAI fails
-        const twitterPost = await prisma.post.create({
-            data: {
-                userId,
-                articleId,
-                platform: "TWITTER",
-                content: `🚀 Just read: ${article.title}\n\nKey takeaway: ${article.summary?.slice(0, 200)}\n\nFull story: ${article.url}`,
-                status: "DRAFT"
-            }
-        })
+        // Fallback Logic
+        // ... (Similar logic, only creating selected platforms)
 
-        const linkedinPost = await prisma.post.create({
-            data: {
-                userId,
-                articleId,
-                platform: "LINKEDIN",
-                content: `📰 Interesting read: ${article.title}\n\n${article.summary}\n\nWhat are your thoughts on this? 💭\n\nRead more: ${article.url}`,
-                status: "DRAFT"
-            }
-        })
+        let twitterPost = null
+        if (options?.platforms?.includes('TWITTER') || !options?.platforms) {
+            twitterPost = await prisma.post.create({
+                data: {
+                    userId,
+                    articleId,
+                    platform: "TWITTER",
+                    content: `🚀 Fallback Tweet: ${article.title}`,
+                    status: "DRAFT"
+                }
+            })
+        }
+
+        let linkedinPost = null
+        if (options?.platforms?.includes('LINKEDIN') || !options?.platforms) {
+            linkedinPost = await prisma.post.create({
+                data: {
+                    userId,
+                    articleId,
+                    platform: "LINKEDIN",
+                    content: `📰 Fallback LinkedIn: ${article.title}`,
+                    status: "DRAFT"
+                }
+            })
+        }
 
         return {
             success: true,
