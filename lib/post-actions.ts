@@ -94,3 +94,28 @@ export async function getScheduledPosts() {
 
     return posts
 }
+
+export async function updatePost(postId: string, data: {
+    content?: string
+    scheduledFor?: Date
+    status?: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED'
+}) {
+    const { userId } = auth()
+    if (!userId) throw new Error("Unauthorized")
+
+    await prisma.post.update({
+        where: {
+            id: postId,
+            userId
+        },
+        data: {
+            content: data.content,
+            scheduledFor: data.scheduledFor,
+            status: data.status
+        }
+    })
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/schedule")
+    return { success: true }
+}

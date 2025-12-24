@@ -2,57 +2,6 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Loader2, Sparkles, Linkedin, Twitter } from "lucide-react"
-import { generateSocialPosts } from "@/lib/social-actions"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-
-interface SocialPostGeneratorDialogProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    articleId: string
-    articleTitle: string
-    customToneName?: string
-}
-
-const TONE_OPTIONS = [
-    { value: "professional", label: "Professional", description: "Formal, business-appropriate" },
-    { value: "casual", label: "Casual", description: "Friendly, conversational" },
-    { value: "witty", label: "Witty", description: "Humor and clever wordplay" },
-    { value: "inspirational", label: "Inspirational", description: "Motivational, uplifting" },
-    { value: "educational", label: "Educational", description: "Teaching-focused, informative" },
-]
-
-const STYLE_OPTIONS = [
-    { value: "viral", label: "Viral", description: "Hooks, controversy, emotion" },
-    { value: "hooky", label: "Hooky", description: "Strong openings, curiosity gaps" },
-    { value: "thread", label: "Thread", description: "Multi-part storytelling" },
-    { value: "professional", label: "Professional", description: "Clean, authoritative" },
-    { value: "story", label: "Story-driven", description: "Narrative arc" },
-]
-
-"use client"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
     Dialog,
     DialogContent,
@@ -141,9 +90,9 @@ export function SocialPostGeneratorDialog({
             })
 
             if (result.success && result.posts) {
-                // Find posts by platform
-                const li = result.posts.find((p: any) => p.platform === "LINKEDIN")?.content || ""
-                const tw = result.posts.find((p: any) => p.platform === "TWITTER")?.content || ""
+                // FIXED: result.posts is an object { linkedin: Post, twitter: Post }, not an array
+                const li = result.posts.linkedin?.content || ""
+                const tw = result.posts.twitter?.content || ""
 
                 setGeneratedLinkedIn(li)
                 setGeneratedTwitter(tw)
@@ -169,6 +118,13 @@ export function SocialPostGeneratorDialog({
                 toast.error("No content to save")
                 return
             }
+
+            // We create a new post entry specifically for this confirmed version
+            // Note: The generateSocialPosts already created "DRAFT" posts in DB, 
+            // but here we are basically creating a "finalized" version or we could have updated those IDs if we tracked them.
+            // For simplicity in this flow, we'll creating a new entry or we'd need to track the IDs returned by generateSocialPosts.
+            // Let's just create a new one for now as "Scheduled" or "Draft" and ignore the previous auto-generated drafts.
+            // Improvement: In a real app we might want to update the draft created by generateSocialPosts.
 
             await savePost({
                 articleId,
@@ -383,7 +339,7 @@ export function SocialPostGeneratorDialog({
                                             )}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {scheduledDate ? format(scheduledDate, "PPP") : <span>Schedule for late</span>}
+                                            {scheduledDate ? format(scheduledDate, "PPP") : <span>Schedule for later</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="end">
