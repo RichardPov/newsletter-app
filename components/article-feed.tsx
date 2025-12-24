@@ -8,21 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Share2, FileText, CheckCircle, RefreshCw, Calendar as CalendarIcon, Loader2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
+    Dialog  // Still used for wrapping? No, SocialPostGeneratorDialog has its own Dialog.
 } from "@/components/ui/dialog"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
+// Actually SocialPostGeneratorDialog is a self-contained component that renders Dialog.
+// But we might need Dialog type? No.
+// Let's replace the imports.
+
+import { SocialPostGeneratorDialog } from "@/components/social-post-generator-dialog"
 import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+// Remove unused
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -185,159 +180,15 @@ export function ArticleFeed({ initialArticles }: ArticleFeedProps) {
             </Tabs>
 
             {/* Social Media Preview Article Dialog */}
-            <Dialog open={isSocialOpen} onOpenChange={setIsSocialOpen}>
-                <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col p-0">
-                    <DialogHeader className="px-6 py-4 border-b">
-                        <DialogTitle>Social Media Generator</DialogTitle>
-                        <DialogDescription>
-                            AI-generated posts based on "{selectedArticle?.title}"
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex-1 overflow-y-auto p-6">
-                        <Tabs defaultValue="linkedin">
-                            <TabsList className="grid w-full grid-cols-2 mb-4">
-                                <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
-                                <TabsTrigger value="twitter">Twitter / X</TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="linkedin" className="space-y-4 m-0">
-                                <div className="space-y-2">
-                                    <Label>Tone of Voice</Label>
-                                    <Select value={linkedinTone} onValueChange={setLinkedinTone}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="professional">Professional & Insightful</SelectItem>
-                                            <SelectItem value="casual">Casual & Storytelling</SelectItem>
-                                            <SelectItem value="educational">Educational & How-to</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="rounded-md bg-muted p-4 text-sm whitespace-pre-wrap">
-                                    {linkedinTone === "professional" && (
-                                        <>
-                                            🚀 <strong>New Insights on this topic</strong>{"\n\n"}
-                                            I just read "{selectedArticle?.title}" and found it fascinating.{"\n\n"}
-                                            {selectedArticle?.summary}{"\n\n"}
-                                            What are your thoughts? #Tech #Innovation
-                                        </>
-                                    )}
-                                    {/* Simplified templates for MVP */}
-                                    {linkedinTone !== "professional" && "Content generation pending..."}
-                                </div>
-
-                                <div className="space-y-2">
-                                    {!linkedinConnected ? (
-                                        <Button className="w-full bg-[#0077b5] hover:bg-[#005e93] text-white" onClick={() => setLinkedinConnected(true)}>
-                                            Connect LinkedIn Account
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            className="w-full bg-[#0077b5] hover:bg-[#005e93] text-white"
-                                            disabled={isPosting}
-                                            onClick={() => handlePost('linkedin')}
-                                        >
-                                            {isPosting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</> : "Post to LinkedIn Now"}
-                                        </Button>
-                                    )}
-                                    {/* Planner Integration */}
-                                    <div className="flex gap-2">
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant={"outline"}
-                                                    className={cn(
-                                                        "flex-1 justify-start text-left font-normal",
-                                                        !scheduleDate && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {scheduleDate ? scheduleDate.toLocaleDateString() : <span>Pick a date</span>}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={scheduleDate}
-                                                    onSelect={setScheduleDate}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <Button variant="secondary" onClick={() => handleSchedule('linkedin')}>
-                                            Schedule in Planner
-                                        </Button>
-                                    </div>
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="twitter" className="space-y-4 m-0">
-                                <div className="space-y-2">
-                                    <Label>Thread Style</Label>
-                                    <Select value={twitterTone} onValueChange={setTwitterTone}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="hooky">Viral / Hooky</SelectItem>
-                                            <SelectItem value="direct">Direct / News</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="rounded-md bg-muted p-4 text-sm whitespace-pre-wrap">
-                                    🧵 {selectedArticle?.title}{"\n\n"}
-                                    {selectedArticle?.summary ? selectedArticle.summary.substring(0, 100) + "..." : "Check this out."}
-                                </div>
-
-                                <div className="space-y-2">
-                                    {!twitterConnected ? (
-                                        <Button className="w-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200" onClick={() => setTwitterConnected(true)}>
-                                            Connect X (Twitter) Account
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            className="w-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-                                            disabled={isPosting}
-                                            onClick={() => handlePost('twitter')}
-                                        >
-                                            {isPosting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</> : "Post to X Now"}
-                                        </Button>
-                                    )}
-                                    {/* Planner Integration */}
-                                    <div className="flex gap-2">
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant={"outline"}
-                                                    className={cn(
-                                                        "flex-1 justify-start text-left font-normal",
-                                                        !scheduleDate && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {scheduleDate ? scheduleDate.toLocaleDateString() : <span>Pick a date</span>}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={scheduleDate}
-                                                    onSelect={setScheduleDate}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <Button variant="secondary" onClick={() => handleSchedule('twitter')}>
-                                            Schedule in Planner
-                                        </Button>
-                                    </div>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            {selectedArticle && (
+                <SocialPostGeneratorDialog
+                    open={isSocialOpen}
+                    onOpenChange={setIsSocialOpen}
+                    articleId={selectedArticle.id}
+                    articleTitle={selectedArticle.title}
+                    customToneName={toneProfile?.name}
+                />
+            )}
         </div>
     )
 }
